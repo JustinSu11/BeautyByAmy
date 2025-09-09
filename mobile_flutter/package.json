@@ -1,0 +1,10 @@
+{
+  "name": "mobile-flutter",
+  "private": true,
+  "scripts": {
+    "dev": "flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000",
+    "build:android": "flutter build apk --dart-define=API_BASE_URL=https://api.example.com",
+    "build:ios": "flutter build ipa --dart-define=API_BASE_URL=https://api.example.com",
+    "gen": "dart run build_runner build --delete-conflicting-outputs"
+  }
+}

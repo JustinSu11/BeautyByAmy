@@ -1,14 +1,11 @@
 {
-  "name": "beauty-by-amy",
-  "version": "0.1.0",
+  "name": "web",
   "private": true,
-  "workspaces": ["mobile_flutter"],
   "scripts": {
-    "dev:web": "next dev --turbopack",
-    "dev:mobile": "npm run dev -w mobile-flutter",
-    "build": "next build --turbopack",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.7",
