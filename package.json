@@ -5,7 +5,7 @@
   "workspaces": ["mobile_flutter"],
   "scripts": {
     "dev:web": "next dev --turbopack",
-    "dev:mobile": "npm run dev -w mobile-flutter",
+    "dev:mobile": "npm run dev -w mobile_flutter",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint"
