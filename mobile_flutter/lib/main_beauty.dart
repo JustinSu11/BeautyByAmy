@@ -89,7 +89,9 @@ class BeautyApp extends StatelessWidget {
                 children: const [
                   Text('The app failed to initialize local storage (Hive).'),
                   SizedBox(height: 8),
-                  Text('Check device storage permissions and logs in the terminal.'),
+                  Text(
+                    'Check device storage permissions and logs in the terminal.',
+                  ),
                 ],
               ),
             ),
