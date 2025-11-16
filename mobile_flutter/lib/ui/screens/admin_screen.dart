@@ -110,30 +110,76 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 itemCount: services.length,
                 itemBuilder: (ctx, i) {
                   final s = services[i];
-                  return ListTile(
-                    title: Text(s.name),
-                    subtitle: Text(
-                      s.price == null
-                          ? 'Varies • ${s.time}'
-                          : '\$${s.price!.toStringAsFixed(0)} • ${s.time}',
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () => showDialog(
-                            context: context,
-                            builder: (_) => EditServiceDialog(service: s),
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      title: Text(s.name),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (s.description != null && s.description!.isNotEmpty)
+                            Text(
+                              s.description!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          const SizedBox(height: 4),
+                          Text(
+                            s.price == null
+                                ? 'Varies • ${s.time}'
+                                : '\$${s.price!.toStringAsFixed(0)} • ${s.time}',
+                            style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () async => await ref
-                              .read(servicesListProvider.notifier)
-                              .delete(s.id),
-                        ),
-                      ],
+                          if (s.requiresDeposit)
+                            Text(
+                              'Deposit: \$${s.depositAmount?.toStringAsFixed(0) ?? '0'}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.orange.shade700,
+                              ),
+                            ),
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () => showDialog(
+                              context: context,
+                              builder: (_) => EditServiceDialog(service: s),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Delete Service'),
+                                  content: Text('Delete "${s.name}"?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed == true) {
+                                await ref
+                                    .read(servicesListProvider.notifier)
+                                    .delete(s.id);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -155,6 +201,7 @@ class CreateServiceDialog extends ConsumerStatefulWidget {
 class _CreateServiceDialogState extends ConsumerState<CreateServiceDialog> {
   final _id = TextEditingController();
   final _name = TextEditingController();
+  final _description = TextEditingController();
   final _price = TextEditingController();
   final _time = TextEditingController();
   bool _requiresDeposit = false;
@@ -164,6 +211,7 @@ class _CreateServiceDialogState extends ConsumerState<CreateServiceDialog> {
     final data = {
       'id': _id.text.trim(),
       'name': _name.text.trim(),
+      'description': _description.text.trim().isEmpty ? null : _description.text.trim(),
       'price': _price.text.isEmpty ? null : double.tryParse(_price.text),
       'time': _time.text.trim(),
       'requiresDeposit': _requiresDeposit,
@@ -189,6 +237,11 @@ class _CreateServiceDialogState extends ConsumerState<CreateServiceDialog> {
             TextField(
               controller: _name,
               decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            TextField(
+              controller: _description,
+              decoration: const InputDecoration(labelText: 'Description (optional)'),
+              maxLines: 3,
             ),
             TextField(
               controller: _price,
@@ -245,6 +298,7 @@ class EditServiceDialog extends ConsumerStatefulWidget {
 
 class _EditServiceDialogState extends ConsumerState<EditServiceDialog> {
   late TextEditingController _name;
+  late TextEditingController _description;
   late TextEditingController _price;
   late TextEditingController _time;
   bool _requiresDeposit = false;
@@ -254,6 +308,7 @@ class _EditServiceDialogState extends ConsumerState<EditServiceDialog> {
   void initState() {
     super.initState();
     _name = TextEditingController(text: widget.service.name);
+    _description = TextEditingController(text: widget.service.description ?? '');
     _price = TextEditingController(
       text: widget.service.price?.toString() ?? '',
     );
@@ -267,6 +322,7 @@ class _EditServiceDialogState extends ConsumerState<EditServiceDialog> {
   Future<void> _save() async {
     final data = {
       'name': _name.text.trim(),
+      'description': _description.text.trim().isEmpty ? null : _description.text.trim(),
       'price': _price.text.isEmpty ? null : double.tryParse(_price.text),
       'time': _time.text.trim(),
       'requiresDeposit': _requiresDeposit,
@@ -288,6 +344,11 @@ class _EditServiceDialogState extends ConsumerState<EditServiceDialog> {
         child: Column(
           children: [
             TextField(controller: _name),
+            TextField(
+              controller: _description,
+              decoration: const InputDecoration(labelText: 'Description'),
+              maxLines: 3,
+            ),
             TextField(controller: _price),
             TextField(controller: _time),
             Row(

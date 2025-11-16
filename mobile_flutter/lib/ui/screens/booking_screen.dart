@@ -28,13 +28,64 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            ListTile(
-              title: Text(service.name),
-              subtitle: Text(service.time),
-              trailing: Text(
-                service.price == null
-                    ? 'Varies'
-                    : '\$${service.price!.toStringAsFixed(0)}',
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      service.name,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    if (service.description != null && service.description!.isNotEmpty) ...[
+                      Text(
+                        service.description!,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Duration: ${service.time}',
+                          style: const TextStyle(color: Colors.black54),
+                        ),
+                        Text(
+                          service.price == null
+                              ? 'Varies'
+                              : '\$${service.price!.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (service.requiresDeposit) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline, size: 16, color: Colors.orange.shade700),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Deposit required: \$${service.depositAmount?.toStringAsFixed(0) ?? '0'}',
+                              style: TextStyle(color: Colors.orange.shade700),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 12),

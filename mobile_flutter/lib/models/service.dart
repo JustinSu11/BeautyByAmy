@@ -1,6 +1,7 @@
 class Service {
   final String id;
   final String name;
+  final String? description;
   final double? price;
   final String time;
   final bool requiresDeposit;
@@ -9,6 +10,7 @@ class Service {
   Service({
     required this.id,
     required this.name,
+    this.description,
     this.price,
     required this.time,
     this.requiresDeposit = false,
@@ -18,6 +20,7 @@ class Service {
   factory Service.fromMap(Map<String, dynamic> m) => Service(
     id: m['id'] as String,
     name: m['name'] as String,
+    description: m['description'] as String?,
     price: m['price'] == null ? null : (m['price'] as num).toDouble(),
     time: m['time'] as String,
     requiresDeposit: m['requiresDeposit'] as bool? ?? false,
@@ -29,6 +32,7 @@ class Service {
   Map<String, dynamic> toMap() => {
     'id': id,
     'name': name,
+    'description': description,
     'price': price,
     'time': time,
     'requiresDeposit': requiresDeposit,
