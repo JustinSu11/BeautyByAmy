@@ -12,18 +12,30 @@ class LandingScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final services = ref.watch(servicesListProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Beauty By Amy')),
+      appBar: AppBar(
+        title: const Text('Beauty By Amy'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.admin_panel_settings_outlined),
+            onPressed: () => context.push('/admin'),
+            tooltip: 'Admin',
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Welcome',
+              'Welcome to Beauty By Amy',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text('Choose a service and book your appointment.'),
+            const Text(
+              'Expert brow and lash services\nBook your appointment today',
+              style: TextStyle(fontSize: 16, color: Colors.black54),
+            ),
             const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerRight,
@@ -46,6 +58,7 @@ class LandingScreen extends ConsumerWidget {
                   return ServiceCard(
                     name: s.name,
                     subtitle: s.time,
+                    description: s.description,
                     price: s.price == null
                         ? 'Varies'
                         : '\$${s.price!.toStringAsFixed(0)}',

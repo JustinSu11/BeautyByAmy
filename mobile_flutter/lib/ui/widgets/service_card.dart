@@ -4,6 +4,7 @@ class ServiceCard extends StatelessWidget {
   final String name;
   final String subtitle;
   final String price;
+  final String? description;
   final VoidCallback? onTap;
   final bool depositRequired;
 
@@ -12,6 +13,7 @@ class ServiceCard extends StatelessWidget {
     required this.name,
     required this.subtitle,
     required this.price,
+    this.description,
     this.onTap,
     this.depositRequired = false,
   });
@@ -45,6 +47,15 @@ class ServiceCard extends StatelessWidget {
               const SizedBox(height: 8),
               Text(name, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 4),
+              if (description != null && description!.isNotEmpty) ...[
+                Text(
+                  description!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11, color: Colors.black54),
+                ),
+                const SizedBox(height: 4),
+              ],
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

@@ -28,6 +28,7 @@ class ServiceListScreen extends ConsumerWidget {
             return ServiceCard(
               name: s.name,
               subtitle: s.time,
+              description: s.description,
               price: s.price == null
                   ? 'Varies'
                   : '\$${s.price!.toStringAsFixed(0)}',
