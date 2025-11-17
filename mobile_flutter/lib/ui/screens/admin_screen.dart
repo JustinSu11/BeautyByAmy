@@ -17,22 +17,27 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   final _passwordCtrl = TextEditingController();
 
   Future<void> _loginAsOwner() async {
-    final owner = dotenv.env['OWNER_EMAIL'] ?? '';
+    final owner = dotenv.env['OWNER_EMAIL'] ?? 'admin@beautybyamy.com';
     final email = _emailCtrl.text.trim();
+    final password = _passwordCtrl.text;
+    
     // Mock: magic link or password. On success, persist a fake token via AdminAuthNotifier
-    if (email == owner) {
-      // simulate magic link accepted
+    if (email.isNotEmpty && (email == owner && password.isEmpty)) {
+      // simulate magic link accepted (owner email without password)
       await ref
           .read(adminAuthProvider.notifier)
           .login('tok_owner_${DateTime.now().millisecondsSinceEpoch}');
-    } else if (email.isNotEmpty && _passwordCtrl.text == 'adminpass') {
+    } else if (email.isNotEmpty && password == 'adminpass') {
+      // password-based login (any email with correct password)
       await ref
           .read(adminAuthProvider.notifier)
           .login('tok_admin_${DateTime.now().millisecondsSinceEpoch}');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid admin credentials')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid admin credentials')),
+        );
+      }
     }
   }
 
