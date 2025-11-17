@@ -46,39 +46,71 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         // simulate magic link accepted (owner email without password)
         print('[AdminScreen] ✅ Owner login successful (email match, no password)');
         
-        await ref
-            .read(adminAuthProvider.notifier)
-            .login('tok_owner_${DateTime.now().millisecondsSinceEpoch}');
-        
-        print('[AdminScreen] Token saved, showing success message');
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Login successful! Loading dashboard...'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
+        try {
+          await ref
+              .read(adminAuthProvider.notifier)
+              .login('tok_owner_${DateTime.now().millisecondsSinceEpoch}');
+          
+          print('[AdminScreen] Token saved, showing success message');
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✅ Login successful! Loading dashboard...'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } catch (e, st) {
+          print('[AdminScreen] ❌ ERROR saving token: $e');
+          print('[AdminScreen] Stack trace: $st');
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Storage error: $e\n\nPlease restart the app.'),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+          rethrow;
         }
       } else if (email.isNotEmpty && password == 'adminpass') {
         // password-based login (any email with correct password)
         print('[AdminScreen] ✅ Admin password login successful');
         
-        await ref
-            .read(adminAuthProvider.notifier)
-            .login('tok_admin_${DateTime.now().millisecondsSinceEpoch}');
-        
-        print('[AdminScreen] Token saved, showing success message');
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Login successful! Loading dashboard...'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
+        try {
+          await ref
+              .read(adminAuthProvider.notifier)
+              .login('tok_admin_${DateTime.now().millisecondsSinceEpoch}');
+          
+          print('[AdminScreen] Token saved, showing success message');
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✅ Login successful! Loading dashboard...'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } catch (e, st) {
+          print('[AdminScreen] ❌ ERROR saving token: $e');
+          print('[AdminScreen] Stack trace: $st');
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Storage error: $e\n\nPlease restart the app.'),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+          rethrow;
         }
       } else {
         print('[AdminScreen] ❌ Login failed - invalid credentials');
@@ -105,7 +137,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Login error: $e'),
+            content: Text('Login error: $e\n\nCheck console for details.'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),

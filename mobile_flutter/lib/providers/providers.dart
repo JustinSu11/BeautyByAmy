@@ -23,24 +23,45 @@ class AdminAuthNotifier extends StateNotifier<bool> {
 
   Future<void> _init() async {
     print('[AdminAuthNotifier] Initializing...');
-    final token = await Persistence.readAdminToken();
-    print('[AdminAuthNotifier] Read token: ${token != null ? "exists" : "null"}');
-    state = token != null;
-    print('[AdminAuthNotifier] Initial state set to: $state');
+    try {
+      final token = await Persistence.readAdminToken();
+      print('[AdminAuthNotifier] Read token: ${token != null ? "exists" : "null"}');
+      state = token != null;
+      print('[AdminAuthNotifier] Initial state set to: $state');
+    } catch (e, st) {
+      print('[AdminAuthNotifier] ERROR during init: $e');
+      print('[AdminAuthNotifier] Stack trace: $st');
+      // Leave state as false if we can't read the token
+      state = false;
+    }
   }
 
   Future<void> login(String token) async {
     print('[AdminAuthNotifier] Login called with token: $token');
-    await Persistence.saveAdminToken(token);
-    state = true;
-    print('[AdminAuthNotifier] State set to true, current state: $state');
+    try {
+      await Persistence.saveAdminToken(token);
+      state = true;
+      print('[AdminAuthNotifier] State set to true, current state: $state');
+    } catch (e, st) {
+      print('[AdminAuthNotifier] ERROR saving token: $e');
+      print('[AdminAuthNotifier] Stack trace: $st');
+      // Re-throw so the caller can handle it
+      rethrow;
+    }
   }
 
   Future<void> logout() async {
     print('[AdminAuthNotifier] Logout called');
-    await Persistence.deleteAdminToken();
-    state = false;
-    print('[AdminAuthNotifier] State set to false');
+    try {
+      await Persistence.deleteAdminToken();
+      state = false;
+      print('[AdminAuthNotifier] State set to false');
+    } catch (e, st) {
+      print('[AdminAuthNotifier] ERROR during logout: $e');
+      print('[AdminAuthNotifier] Stack trace: $st');
+      // Set state to false anyway
+      state = false;
+    }
   }
 }
 
