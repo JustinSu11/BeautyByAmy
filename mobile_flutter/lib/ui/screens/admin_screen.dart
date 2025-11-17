@@ -15,29 +15,67 @@ class AdminScreen extends ConsumerStatefulWidget {
 class _AdminScreenState extends ConsumerState<AdminScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  bool _isLoading = false;
 
   Future<void> _loginAsOwner() async {
+    setState(() => _isLoading = true);
+    
     final owner = dotenv.env['OWNER_EMAIL'] ?? 'admin@beautybyamy.com';
     final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text;
     
+    print('[AdminScreen] Login attempt - email: $email, owner: $owner, password empty: ${password.isEmpty}');
+    
     // Mock: magic link or password. On success, persist a fake token via AdminAuthNotifier
     if (email.isNotEmpty && (email == owner && password.isEmpty)) {
       // simulate magic link accepted (owner email without password)
+      print('[AdminScreen] Owner login successful');
       await ref
           .read(adminAuthProvider.notifier)
           .login('tok_owner_${DateTime.now().millisecondsSinceEpoch}');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login successful! Welcome, Owner.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } else if (email.isNotEmpty && password == 'adminpass') {
       // password-based login (any email with correct password)
+      print('[AdminScreen] Admin password login successful');
       await ref
           .read(adminAuthProvider.notifier)
           .login('tok_admin_${DateTime.now().millisecondsSinceEpoch}');
-    } else {
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid admin credentials')),
+          const SnackBar(
+            content: Text('Login successful! Welcome, Admin.'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
+    } else {
+      print('[AdminScreen] Login failed - invalid credentials');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              email.isEmpty 
+                ? 'Please enter an email address'
+                : 'Invalid credentials. Try:\n• Email: admin@beautybyamy.com (no password)\n• OR any email with password: adminpass'
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+    
+    if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -57,19 +95,40 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             children: [
               TextField(
                 controller: _emailCtrl,
-                decoration: const InputDecoration(labelText: 'Owner email'),
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'admin@beautybyamy.com',
+                ),
+                enabled: !_isLoading,
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _passwordCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Password (or leave empty for magic link)',
+                  labelText: 'Password (optional)',
+                  hintText: 'Leave blank or enter: adminpass',
                 ),
+                obscureText: true,
+                enabled: !_isLoading,
               ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: _loginAsOwner,
-                child: const Text('Send magic link / Login'),
+                onPressed: _isLoading ? null : _loginAsOwner,
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Login'),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Login options:\n'
+                '• Email: admin@beautybyamy.com (no password)\n'
+                '• OR any email + password: adminpass',
+                style: TextStyle(fontSize: 12, color: Colors.black54),
+                textAlign: TextAlign.center,
               ),
             ],
           ),

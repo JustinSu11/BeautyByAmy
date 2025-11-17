@@ -22,18 +22,25 @@ class AdminAuthNotifier extends StateNotifier<bool> {
   }
 
   Future<void> _init() async {
+    print('[AdminAuthNotifier] Initializing...');
     final token = await Persistence.readAdminToken();
+    print('[AdminAuthNotifier] Read token: ${token != null ? "exists" : "null"}');
     state = token != null;
+    print('[AdminAuthNotifier] Initial state set to: $state');
   }
 
   Future<void> login(String token) async {
+    print('[AdminAuthNotifier] Login called with token: $token');
     await Persistence.saveAdminToken(token);
     state = true;
+    print('[AdminAuthNotifier] State set to true, current state: $state');
   }
 
   Future<void> logout() async {
+    print('[AdminAuthNotifier] Logout called');
     await Persistence.deleteAdminToken();
     state = false;
+    print('[AdminAuthNotifier] State set to false');
   }
 }
 
