@@ -65,17 +65,18 @@ There are two ways to access the admin panel:
 
 You have two login options:
 
-#### Option 1: Owner Email (Magic Link)
-- Enter the owner email configured in your `.env` file
-- Default: `admin@beautybyamy.com`
-- Leave password blank
+#### Option 1: Owner Email (No Password)
+- Enter the owner email: `admin@beautybyamy.com`
+- **Leave the password field blank/empty**
 - Tap "Send magic link / Login"
 - This simulates a magic link authentication (no actual email sent in prototype)
+- Works even without a `.env` file (uses default email)
 
 #### Option 2: Admin Password
-- Enter any email address
+- Enter **any email address**
 - Enter password: `adminpass`
 - Tap "Send magic link / Login"
+- This works with any email as long as the password is correct
 
 ### Managing Services
 
@@ -187,9 +188,18 @@ This feature is **not implemented** in the current frontend prototype but can be
 ## Troubleshooting
 
 ### Can't log in to admin panel
-- Verify your `.env` file has correct `OWNER_EMAIL` configured
-- Try using `admin@beautybyamy.com` with password `adminpass`
-- Make sure you're tapping "Send magic link / Login" button
+
+**Solution 1 - Owner Email (No Password):**
+- Enter email: `admin@beautybyamy.com`
+- **Leave password field completely empty/blank**
+- Tap "Send magic link / Login"
+
+**Solution 2 - Admin Password:**
+- Enter **any email address** (e.g., `test@example.com`)
+- Enter password: `adminpass`
+- Tap "Send magic link / Login"
+
+**Note**: The app works without a `.env` file. The default owner email is `admin@beautybyamy.com`.
 
 ### Services not showing up
 - Check if services were successfully created (look for them in admin panel)

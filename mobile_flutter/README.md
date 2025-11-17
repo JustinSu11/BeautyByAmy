@@ -44,10 +44,19 @@ This folder contains the Flutter mobile app for BeautyByAmy - a booking system f
 
 To access the admin panel:
 
-1. Navigate to the admin screen (add `/admin` to the route or navigate from landing)
+1. Navigate to the admin screen:
+   - Tap the admin icon (⚙️) in the top-right of the landing page
+   - Or navigate directly to `/admin` route
+
 2. Login with one of these methods:
-   - **Owner Email**: Enter the email from `OWNER_EMAIL` in .env (default: `admin@beautybyamy.com`)
-   - **Admin Password**: Enter any email with password `adminpass`
+   - **Owner Email (No Password)**: 
+     - Email: `admin@beautybyamy.com`
+     - Password: leave blank/empty
+     - Works without `.env` file (default email)
+   - **Admin Password**: 
+     - Email: any email address
+     - Password: `adminpass`
+
 3. Once logged in, you can:
    - View all services
    - Add new services (click "Add service" button)
