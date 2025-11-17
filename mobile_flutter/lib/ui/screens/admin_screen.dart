@@ -27,7 +27,16 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     setState(() => _isLoading = true);
     
     try {
-      final owner = dotenv.env['OWNER_EMAIL'] ?? 'admin@beautybyamy.com';
+      // Safely get owner email, with fallback if dotenv not initialized
+      String owner = 'admin@beautybyamy.com';
+      try {
+        if (dotenv.isInitialized) {
+          owner = dotenv.env['OWNER_EMAIL'] ?? 'admin@beautybyamy.com';
+        }
+      } catch (e) {
+        print('[AdminScreen] Warning: dotenv not available, using default owner email');
+      }
+      
       final email = _emailCtrl.text.trim();
       final password = _passwordCtrl.text;
       
