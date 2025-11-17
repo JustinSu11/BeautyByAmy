@@ -18,8 +18,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   bool _isLoading = false;
 
   Future<void> _loginAsOwner() async {
-    if (_isLoading) return; // Prevent multiple simultaneous login attempts
+    if (_isLoading) {
+      print('[AdminScreen] Login already in progress, ignoring');
+      return;
+    }
     
+    print('[AdminScreen] ===== LOGIN STARTED =====');
     setState(() => _isLoading = true);
     
     try {
@@ -27,20 +31,31 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       final email = _emailCtrl.text.trim();
       final password = _passwordCtrl.text;
       
-      print('[AdminScreen] Login attempt - email: $email, owner: $owner, password empty: ${password.isEmpty}');
+      print('[AdminScreen] Login attempt:');
+      print('  - Email entered: "$email"');
+      print('  - Owner email: "$owner"');
+      print('  - Password empty: ${password.isEmpty}');
+      print('  - Password value: "${password.isEmpty ? "(empty)" : "(has value)"}"');
+      print('  - Email matches owner: ${email == owner}');
+      
+      // Add a small delay to ensure UI updates
+      await Future.delayed(const Duration(milliseconds: 100));
       
       // Mock: magic link or password. On success, persist a fake token via AdminAuthNotifier
       if (email.isNotEmpty && (email == owner && password.isEmpty)) {
         // simulate magic link accepted (owner email without password)
-        print('[AdminScreen] Owner login successful');
+        print('[AdminScreen] ✅ Owner login successful (email match, no password)');
+        
         await ref
             .read(adminAuthProvider.notifier)
             .login('tok_owner_${DateTime.now().millisecondsSinceEpoch}');
         
+        print('[AdminScreen] Token saved, showing success message');
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Login successful!'),
+              content: Text('✅ Login successful! Loading dashboard...'),
               backgroundColor: Colors.green,
               duration: Duration(seconds: 2),
             ),
@@ -48,37 +63,56 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         }
       } else if (email.isNotEmpty && password == 'adminpass') {
         // password-based login (any email with correct password)
-        print('[AdminScreen] Admin password login successful');
+        print('[AdminScreen] ✅ Admin password login successful');
+        
         await ref
             .read(adminAuthProvider.notifier)
             .login('tok_admin_${DateTime.now().millisecondsSinceEpoch}');
         
+        print('[AdminScreen] Token saved, showing success message');
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Login successful!'),
+              content: Text('✅ Login successful! Loading dashboard...'),
               backgroundColor: Colors.green,
               duration: Duration(seconds: 2),
             ),
           );
         }
       } else {
-        print('[AdminScreen] Login failed - invalid credentials');
+        print('[AdminScreen] ❌ Login failed - invalid credentials');
+        print('  - Reason: ${email.isEmpty ? "Email is empty" : "Credentials do not match"}');
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
                 email.isEmpty 
                   ? 'Please enter an email address'
-                  : 'Invalid credentials'
+                  : 'Invalid credentials. Please check your email and password.'
               ),
               backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
+              duration: const Duration(seconds: 4),
             ),
           );
         }
       }
+    } catch (e, stackTrace) {
+      print('[AdminScreen] ❌ ERROR during login: $e');
+      print('[AdminScreen] Stack trace: $stackTrace');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
     } finally {
+      print('[AdminScreen] ===== LOGIN ENDED =====');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -94,40 +128,87 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     final isAdmin = ref.watch(adminAuthProvider);
     if (!isAdmin) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Admin login')),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              TextField(
-                controller: _emailCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
+        appBar: AppBar(title: const Text('Admin Login')),
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(
+                  Icons.admin_panel_settings,
+                  size: 80,
+                  color: Colors.pink,
                 ),
-                keyboardType: TextInputType.emailAddress,
-                enabled: !_isLoading,
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _passwordCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
+                const SizedBox(height: 24),
+                const Text(
+                  'Administrator Access',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                obscureText: true,
-                enabled: !_isLoading,
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _loginAsOwner,
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Login'),
-              ),
-            ],
+                const SizedBox(height: 32),
+                TextField(
+                  controller: _emailCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.email),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  enabled: !_isLoading,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _passwordCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock),
+                  ),
+                  obscureText: true,
+                  enabled: !_isLoading,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _loginAsOwner,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: _isLoading
+                      ? const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text('Logging in...'),
+                          ],
+                        )
+                      : const Text(
+                          'Login',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                ),
+                if (_isLoading) ...[
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Authenticating...',
+                    style: TextStyle(color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       );
