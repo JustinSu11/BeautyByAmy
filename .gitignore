@@ -33,6 +33,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 # explicit mobile app env (local only)
 mobile_flutter/.env
 
