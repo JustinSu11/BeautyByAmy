@@ -2,7 +2,9 @@
   "name": "beauty-by-amy",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["mobile_flutter"],
+  "workspaces": [
+    "mobile_flutter"
+  ],
   "scripts": {
     "dev:web": "next dev --turbopack",
     "dev:mobile": "npm run dev -w mobile_flutter",
@@ -22,7 +24,7 @@
     "next": "15.5.0",
     "next-themes": "^0.4.6",
     "react": "19.1.0",
-    "react-day-picker": "^9.9.0",
+    "react-day-picker": "^9.13.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",
     "sonner": "^2.0.7",

@@ -43,3 +43,11 @@
         rgba(0, 0, 0, 1) 30%
     );
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

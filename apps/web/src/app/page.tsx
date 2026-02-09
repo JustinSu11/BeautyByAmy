@@ -1,14 +1,4 @@
 import NavigationBar from "@/components/ui/navigation-bar"
-import { SERVICES } from "@/data/services"
-import { 
-    Card,
-    CardAction,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
 import HeroSection from "@/components/ui/LandingPage/hero-section"
 import ServicesSection from "@/components/ui/LandingPage/services-section"
 import GallerySection from "@/components/ui/LandingPage/gallery-section"
