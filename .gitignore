@@ -44,3 +44,6 @@ mobile_flutter/.env
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Claude Code project context (personal notes, not for git)
+CLAUDE.md
