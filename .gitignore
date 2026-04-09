@@ -43,3 +43,7 @@ mobile_flutter/.env
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Claude Code
+.claude/
+CLAUDE.md
