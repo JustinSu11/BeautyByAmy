@@ -24,7 +24,7 @@ export function HeroSection() {
       {/* Content */}
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-32 text-center lg:px-8">
         <p className="mb-4 text-xs font-medium uppercase tracking-[0.3em] text-gold-light">
-          Beverly Hills Beauty Studio
+          Mobile, AL Beauty Studio
         </p>
         <h1 className="font-serif text-4xl leading-tight text-card sm:text-5xl md:text-6xl lg:text-7xl text-balance">
           Elevate Your

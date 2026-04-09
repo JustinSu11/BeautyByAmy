@@ -3,21 +3,30 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
 import type { Service } from './services-data'
 
-export type BookingStep = 'services' | 'datetime' | 'summary'
+export type BookingStep = 'services' | 'datetime' | 'info' | 'summary'
+
+export interface CustomerInfo {
+  name: string
+  email: string
+  phone: string
+}
 
 interface BookingState {
   step: BookingStep
-  selectedServices: Service[]
+  selectedService: Service | null
   selectedDate: Date | null
   selectedTime: string | null
+  customerInfo: CustomerInfo
+  policyAccepted: boolean
 }
 
 interface BookingContextValue extends BookingState {
   setStep: (step: BookingStep) => void
-  toggleService: (service: Service) => void
-  isServiceSelected: (serviceId: string) => boolean
+  selectService: (service: Service | null) => void
   setSelectedDate: (date: Date | null) => void
   setSelectedTime: (time: string | null) => void
+  setCustomerInfo: (info: CustomerInfo) => void
+  setPolicyAccepted: (accepted: boolean) => void
   totalPrice: number
   totalDuration: number
   canProceed: boolean
@@ -26,38 +35,51 @@ interface BookingContextValue extends BookingState {
 
 const BookingContext = createContext<BookingContextValue | null>(null)
 
+const emptyCustomerInfo: CustomerInfo = { name: '', email: '', phone: '' }
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
 export function BookingProvider({ children }: { children: ReactNode }) {
   const [step, setStep] = useState<BookingStep>('services')
-  const [selectedServices, setSelectedServices] = useState<Service[]>([])
+  const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo>(emptyCustomerInfo)
+  const [policyAccepted, setPolicyAccepted] = useState(false)
 
-  const toggleService = useCallback((service: Service) => {
-    setSelectedServices((prev) => {
-      const exists = prev.find((s) => s.id === service.id)
-      if (exists) return prev.filter((s) => s.id !== service.id)
-      return [...prev, service]
-    })
+  const selectService = useCallback((service: Service | null) => {
+    setSelectedService(service)
   }, [])
 
-  const isServiceSelected = useCallback(
-    (serviceId: string) => selectedServices.some((s) => s.id === serviceId),
-    [selectedServices]
-  )
+  const totalPrice = selectedService?.price ?? 0
+  const totalDuration = selectedService?.duration ?? 0
 
-  const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0)
-  const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0)
-
-  const canProceed =
-    (step === 'services' && selectedServices.length > 0) ||
-    (step === 'datetime' && selectedDate !== null && selectedTime !== null) ||
-    step === 'summary'
+  const canProceed = (() => {
+    switch (step) {
+      case 'services':
+        return selectedService !== null
+      case 'datetime':
+        return selectedDate !== null && selectedTime !== null
+      case 'info':
+        return (
+          customerInfo.name.trim().length >= 2 &&
+          isValidEmail(customerInfo.email) &&
+          customerInfo.phone.replace(/\D/g, '').length >= 7
+        )
+      case 'summary':
+        return policyAccepted
+    }
+  })()
 
   const reset = useCallback(() => {
     setStep('services')
-    setSelectedServices([])
+    setSelectedService(null)
     setSelectedDate(null)
     setSelectedTime(null)
+    setCustomerInfo(emptyCustomerInfo)
+    setPolicyAccepted(false)
   }, [])
 
   return (
@@ -65,13 +87,16 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       value={{
         step,
         setStep,
-        selectedServices,
-        toggleService,
-        isServiceSelected,
+        selectedService,
+        selectService,
         selectedDate,
         setSelectedDate,
         selectedTime,
         setSelectedTime,
+        customerInfo,
+        setCustomerInfo,
+        policyAccepted,
+        setPolicyAccepted,
         totalPrice,
         totalDuration,
         canProceed,

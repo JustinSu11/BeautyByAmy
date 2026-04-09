@@ -3,36 +3,44 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useScrollAnimate } from '@/hooks/use-scroll-animate'
 import { cn } from '@/lib/utils'
-import { Star, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ThumbsUp, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const testimonials = [
   {
     quote:
-      "Amy is an absolute artist. I've never felt more beautiful or confident. The attention to detail, the calming atmosphere, the results -- everything is beyond five stars.",
-    name: 'Sarah Mitchell',
-    detail: 'Classic Full Set & Brow Lamination',
-    since: 'Client since 2022',
+      "Amy did my permanent ombré eyebrows and I couldn't be happier. She educated me throughout the entire process, carefully mapped my shape, and made sure I felt completely comfortable and pain-free from start to finish. My brows turned out beautifully — I'm so glad I made this investment!",
+    name: 'Latoya Walker',
+    detail: 'Permanent Ombré Brows',
   },
   {
     quote:
-      "I was so nervous about getting permanent makeup, but Amy made the entire process comfortable and stress-free. My powder brows look incredibly natural -- I wake up feeling put-together every single day.",
-    name: 'Jessica Park',
-    detail: 'Powder Brows',
-    since: 'Client since 2023',
+      "Amy takes so much pride in her work! She will make sure it is perfection before she sends you out that door. I've had my ombré brows since 2019 and they still look so good — I get compliments on them daily on how natural they look. 10/10 highly recommend!",
+    name: 'Roth Ouisy',
+    detail: 'Ombré Brows',
   },
   {
     quote:
-      "I've been to many lash artists and Amy is by far the best. She takes her time, listens to what I want, and the retention is unbeatable. Her studio feels like a little luxury escape.",
-    name: 'Mia Rodriguez',
-    detail: 'Mega Volume Full Set',
-    since: 'Client since 2021',
+      "I've been going to Amy for years and every single visit has been an absolute pleasure. She's professional, warm, and genuinely cares about how you feel walking out of that chair. My lashes always look amazing, last beautifully, and never feel rushed. She's truly a master of her craft.",
+    name: 'Shelly Kolger',
+    detail: 'Lash Extensions',
   },
   {
     quote:
-      "The lip blush completely changed my morning routine. Amy matched the perfect shade to my skin tone. It's subtle, natural, and I couldn't be happier with the result.",
-    name: 'Danielle Tran',
-    detail: 'Lip Blush',
-    since: 'Client since 2024',
+      "After a terrible microblading experience, I turned to Amy for help. From the moment I arrived, her kindness, attention to detail, and dedication made me feel truly at ease. She treated me like a queen. Don't hesitate to book — you'll be absolutely thrilled, because she'll guarantee it!",
+    name: 'Patra Prim',
+    detail: 'Brow Transformation',
+  },
+  {
+    quote:
+      "Amy is great at what she does! I've done brows and lips with her and I wouldn't trust anyone else at this point. 100% recommend!",
+    name: 'Meg Slezak',
+    detail: 'Brows & Lip Blush',
+  },
+  {
+    quote:
+      "Amy is the first and will be the only to do lashes for me! She provided a relaxing atmosphere and service that is unmatched. Highly recommend Amy for your lash and brow needs!",
+    name: 'Barclay Davis',
+    detail: 'Lash Extensions',
   },
 ]
 
@@ -82,11 +90,10 @@ export function TestimonialSection() {
           What Our Clients Say
         </p>
 
-        {/* Stars */}
-        <div className="mb-8 flex items-center justify-center gap-1">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star key={i} className="h-4 w-4 fill-gold text-gold" />
-          ))}
+        {/* Recommends badge */}
+        <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5">
+          <ThumbsUp className="h-3.5 w-3.5 text-gold" />
+          <span className="text-xs font-medium uppercase tracking-wider text-gold-light">Recommends Amy</span>
         </div>
 
         {/* Quote area */}
@@ -111,7 +118,6 @@ export function TestimonialSection() {
             {t.name}
           </cite>
           <span className="text-xs text-gold-light">{t.detail}</span>
-          <span className="text-xs text-card/40">{t.since}</span>
         </div>
 
         {/* Navigation */}

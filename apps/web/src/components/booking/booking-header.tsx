@@ -8,7 +8,8 @@ import { cn } from '@/lib/utils'
 const steps: { key: BookingStep; label: string; number: number }[] = [
   { key: 'services', label: 'Services', number: 1 },
   { key: 'datetime', label: 'Date & Time', number: 2 },
-  { key: 'summary', label: 'Confirm', number: 3 },
+  { key: 'info', label: 'Your Info', number: 3 },
+  { key: 'summary', label: 'Confirm', number: 4 },
 ]
 
 export function BookingHeader() {

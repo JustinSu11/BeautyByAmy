@@ -2,9 +2,8 @@
 
 import { useBooking } from '@/lib/booking-context'
 import { formatDuration, formatPrice } from '@/lib/services-data'
-import { Calendar, Clock, Shield, X } from 'lucide-react'
+import { Calendar, Clock, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ScrollArea } from '@/components/ui/scroll-area'
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -25,28 +24,26 @@ function formatTimeLabel(time: string): string {
 
 export function BookingSummary({ className }: { className?: string }) {
   const {
-    selectedServices,
+    selectedService,
     selectedDate,
     selectedTime,
     totalPrice,
     totalDuration,
-    toggleService,
     step,
     setStep,
+    canProceed,
+    policyAccepted,
+    setPolicyAccepted,
   } = useBooking()
 
-  const isServicesStep = step === 'services'
-
-  if (selectedServices.length === 0) {
+  if (!selectedService) {
     return (
       <div className={cn('rounded-xl border border-dashed border-border bg-card p-6 text-center', className)}>
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
           <Calendar className="h-5 w-5 text-muted-foreground" />
         </div>
         <p className="font-serif text-lg text-muted-foreground">Your Booking</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Select services to get started
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">Select a service to get started</p>
       </div>
     )
   }
@@ -57,31 +54,16 @@ export function BookingSummary({ className }: { className?: string }) {
         <h3 className="font-serif text-lg text-charcoal">Booking Summary</h3>
       </div>
 
-      <ScrollArea className="max-h-60">
-        <div className="flex flex-col gap-3 p-5">
-          {selectedServices.map((service) => (
-            <div key={service.id} className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">{service.name}</p>
-                <p className="text-xs text-muted-foreground">{formatDuration(service.duration)}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-charcoal">{formatPrice(service.price)}</span>
-                {isServicesStep && (
-                  <button
-                    onClick={() => toggleService(service)}
-                    className="flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                    aria-label={`Remove ${service.name}`}
-                    type="button"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+      {/* Selected service */}
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground">{selectedService.name}</p>
+            <p className="text-xs text-muted-foreground">{formatDuration(selectedService.duration)}</p>
+          </div>
+          <span className="text-sm font-semibold text-charcoal">{formatPrice(selectedService.price)}</span>
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Date & Time */}
       {selectedDate && (
@@ -113,19 +95,38 @@ export function BookingSummary({ className }: { className?: string }) {
         </div>
       </div>
 
-      {/* CTA */}
+      {/* Policy checkbox + CTA on summary step */}
       {step === 'summary' && (
         <div className="border-t border-border p-5">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={policyAccepted}
+              onChange={(e) => setPolicyAccepted(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-gold"
+            />
+            <span className="text-xs leading-relaxed text-muted-foreground">
+              I have read and agree to the booking policies above, including the 24-hour cancellation
+              notice requirement and the digital waiver I will sign before my appointment.
+            </span>
+          </label>
+
           <button
             type="button"
+            disabled={!policyAccepted}
             onClick={() => {
-              // In a real app this would navigate to a waiver page
-              alert('Proceeding to sign waiver...')
+              // Waiver signing flow — TBD with Amy
+              alert('Booking confirmed! Waiver signing coming soon.')
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-charcoal px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-charcoal-light"
+            className={cn(
+              'mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-sm font-semibold transition-colors',
+              policyAccepted
+                ? 'bg-charcoal text-primary-foreground hover:bg-charcoal/90'
+                : 'cursor-not-allowed bg-muted text-muted-foreground'
+            )}
           >
             <Shield className="h-4 w-4" />
-            Next: Sign Waiver
+            Confirm Booking
           </button>
           <p className="mt-2 text-center text-xs text-muted-foreground">
             A deposit may be required to confirm your booking
@@ -133,14 +134,16 @@ export function BookingSummary({ className }: { className?: string }) {
         </div>
       )}
 
-      {step !== 'summary' && step === 'datetime' && selectedDate && selectedTime && (
+      {/* "Review Booking" CTA on datetime step */}
+      {step === 'datetime' && selectedDate && selectedTime && (
         <div className="border-t border-border p-5">
           <button
             type="button"
-            onClick={() => setStep('summary')}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-gold-dark"
+            onClick={() => setStep('info')}
+            disabled={!canProceed}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Review Booking
+            Continue to Your Info
           </button>
         </div>
       )}

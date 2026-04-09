@@ -6,9 +6,9 @@ import { cn } from '@/lib/utils'
 import { ArrowRight, MapPin, Phone, Clock } from 'lucide-react'
 
 const contactDetails = [
-  { icon: MapPin, label: '123 Luxury Lane, Suite 4, Beverly Hills, CA 90210' },
-  { icon: Phone, label: '(310) 555-0187' },
-  { icon: Clock, label: 'Tue-Sat: 9AM - 7PM | Sun-Mon: Closed' },
+  { icon: MapPin, label: '100 North Florida Street, Mobile, AL 36607' },
+  { icon: Phone, label: '(251) 273-2769' },
+  { icon: Clock, label: 'Mon–Sat: 9AM – 5PM | Sun: Closed' },
 ]
 
 export function CtaSection() {

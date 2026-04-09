@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Instagram, Mail, MapPin, Phone } from 'lucide-react'
+import { Instagram, Facebook, Mail, MapPin, Phone } from 'lucide-react'
 
 const footerLinks = [
   { label: 'Home', href: '/' },
@@ -9,8 +9,9 @@ const footerLinks = [
 ]
 
 const socialLinks = [
-  { label: 'Instagram', href: '#', icon: Instagram },
-  { label: 'Email', href: 'mailto:hello@beautybyamy.com', icon: Mail },
+  { label: 'Instagram', href: 'https://www.instagram.com/iibeautybyamyii/', icon: Instagram },
+  { label: 'Facebook', href: 'https://www.facebook.com/iibeautybyamy/', icon: Facebook },
+  { label: 'Email', href: 'mailto:beautybyamyle@gmail.com', icon: Mail },
 ]
 
 export function SiteFooter() {
@@ -57,15 +58,15 @@ export function SiteFooter() {
             <ul className="flex flex-col gap-3 text-sm text-card/60">
               <li className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 shrink-0 text-gold/60" />
-                123 Luxury Lane, Suite 4, Beverly Hills, CA 90210
+                100 North Florida Street, Mobile, AL, United States, 36607
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0 text-gold/60" />
-                (310) 555-0187
+                (251) 273-2769
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0 text-gold/60" />
-                hello@beautybyamy.com
+                beautybyamyle@gmail.com
               </li>
             </ul>
 

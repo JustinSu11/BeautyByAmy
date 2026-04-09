@@ -10,12 +10,12 @@ interface ServiceCardProps {
 }
 
 export function ServiceCard({ service }: ServiceCardProps) {
-  const { toggleService, isServiceSelected } = useBooking()
-  const selected = isServiceSelected(service.id)
+  const { selectService, selectedService } = useBooking()
+  const selected = selectedService?.id === service.id
 
   return (
     <button
-      onClick={() => toggleService(service)}
+      onClick={() => selectService(service)}
       className={cn(
         'group relative flex w-full items-center gap-4 rounded-lg border p-4 text-left transition-all',
         'hover:shadow-sm',

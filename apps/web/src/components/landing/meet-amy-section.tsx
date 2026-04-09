@@ -6,9 +6,9 @@ import { cn } from '@/lib/utils'
 import { Award, Heart, Shield } from 'lucide-react'
 
 const credentials = [
-  { icon: Award, label: 'Certified Lash Artist' },
-  { icon: Shield, label: '8+ Years Experience' },
-  { icon: Heart, label: '2,000+ Happy Clients' },
+  { icon: Award, label: '3x Certified Brow & Lash Artist' },
+  { icon: Shield, label: 'Soft & Natural Results' },
+  { icon: Heart, label: 'Done With Love' },
 ]
 
 export function MeetAmySection() {
@@ -44,18 +44,17 @@ export function MeetAmySection() {
               Meet Your Artist
             </p>
             <h2 className="font-serif text-3xl text-charcoal sm:text-4xl text-balance">
-              Amy Chen
+              Amy Le
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground lg:text-lg">
-              With over eight years dedicated to the art of beauty enhancement,
-              I specialize in creating looks that are uniquely yours. Every lash,
-              every brow stroke, and every pigment is placed with meticulous care
-              and an eye for natural elegance.
+              3x Certified Brow & Lash Artist specializing in lash extensions and
+              all brow services — including our most popular Ombré Brows. I&apos;m
+              dedicated to keeping your results as soft and natural as possible
+              while giving you the shape and look that fits you and only you.
             </p>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground lg:text-lg">
-              My studio is your sanctuary -- a quiet, private space where luxury
-              meets comfort. I use only premium, cruelty-free products and follow
-              the highest hygiene standards.
+              Every appointment is personal. Every service is tailored to your
+              unique features. And we do it all with love.
             </p>
 
             {/* Credentials */}

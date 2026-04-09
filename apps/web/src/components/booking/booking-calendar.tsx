@@ -135,7 +135,7 @@ export function BookingCalendar() {
                 todayMark && !selected && available && 'font-semibold'
               )}
               aria-label={`${MONTHS[viewMonth]} ${day}, ${viewYear}${!available ? ' (unavailable)' : ''}`}
-              aria-selected={selected}
+              aria-pressed={selected}
             >
               {day}
               {todayMark && !selected && (
