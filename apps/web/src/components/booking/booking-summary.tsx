@@ -95,7 +95,7 @@ export function BookingSummary({ className }: { className?: string }) {
         </div>
       </div>
 
-      {/* Policy checkbox + CTA on summary step */}
+      {/* Confirm step: policy checkbox + submit */}
       {step === 'summary' && (
         <div className="border-t border-border p-5">
           <label className="flex cursor-pointer items-start gap-3">
@@ -106,8 +106,8 @@ export function BookingSummary({ className }: { className?: string }) {
               className="mt-0.5 h-4 w-4 shrink-0 accent-gold"
             />
             <span className="text-xs leading-relaxed text-muted-foreground">
-              I have read and agree to the booking policies above, including the 24-hour cancellation
-              notice requirement and the digital waiver I will sign before my appointment.
+              I have read and agree to the booking policies, including the 24-hour cancellation notice
+              requirement and the digital waiver I will sign before my appointment.
             </span>
           </label>
 
@@ -128,14 +128,17 @@ export function BookingSummary({ className }: { className?: string }) {
             <Shield className="h-4 w-4" />
             Confirm Booking
           </button>
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            A deposit may be required to confirm your booking
-          </p>
+
+          {selectedService.requiresDeposit && (
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              A deposit is required to secure this booking
+            </p>
+          )}
         </div>
       )}
 
-      {/* "Review Booking" CTA on datetime step */}
-      {step === 'datetime' && selectedDate && selectedTime && (
+      {/* "Continue to Your Info" CTA on booking step once date + time selected */}
+      {step === 'booking' && selectedDate && selectedTime && (
         <div className="border-t border-border p-5">
           <button
             type="button"

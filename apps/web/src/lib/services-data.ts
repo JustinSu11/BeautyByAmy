@@ -7,6 +7,8 @@ export interface Service {
   duration: number // in minutes
   price: number
   description?: string
+  /** True for high-investment services (PMU + full lash sets) that require a booking deposit */
+  requiresDeposit?: boolean
 }
 
 export const categories = [
@@ -59,12 +61,39 @@ const CATEGORY_MAP: Record<string, Service['category']> = {
   service31: 'permanent-makeup', // Additional Correction/Touch Up
 }
 
+/**
+ * Services that require a deposit to secure the booking.
+ * - All permanent makeup (long, expensive, pigment/technique investment)
+ * - Full initial lash sets (2h+ appointments; fills do not require a deposit)
+ */
+const DEPOSIT_REQUIRED = new Set([
+  // Permanent Makeup — all PMU services
+  'service6',  // PMU consultation
+  'service7',  // Patch test
+  'service8',  // Ombré
+  'service9',  // Microshading Cover-Up
+  'service10', // Lip blush
+  'service12', // Microblading
+  'service13', // Microshading
+  'service14', // Ombré Cover-Up
+  'service19', // Cover-Up with Correction
+  'service21', // Brow Color Refresh 6mo–1yr
+  'service22', // Brow Color Refresh 12–20mo
+  'service23', // Brow Color Refresh 8wk–6mo
+  'service31', // Additional Correction/Touch Up
+  // Full initial lash sets
+  'service2',  // Volume Set
+  'service15', // Hybrid Set
+  'service27', // Classic Set
+])
+
 export const services: Service[] = RAW_SERVICES.map((s) => ({
   id: s.id,
   name: s.name,
   category: CATEGORY_MAP[s.id] ?? 'eyelashes',
   duration: parseDuration(s.time),
   price: typeof s.price === 'string' ? 0 : s.price,
+  requiresDeposit: DEPOSIT_REQUIRED.has(s.id),
 }))
 
 export function getServicesByCategory(category: string): Service[] {

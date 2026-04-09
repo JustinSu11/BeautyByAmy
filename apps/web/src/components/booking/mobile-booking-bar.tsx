@@ -29,10 +29,10 @@ export function MobileBookingBar() {
 
   const getButtonLabel = () => {
     switch (step) {
-      case 'services':
-        return selectedService ? 'Choose Date & Time' : 'Select a Service'
-      case 'datetime':
-        return selectedDate && selectedTime ? 'Continue to Your Info' : 'Choose Date & Time'
+      case 'booking':
+        if (!selectedService) return 'Select a Service'
+        if (!selectedDate || !selectedTime) return 'Choose Date & Time'
+        return 'Continue to Your Info'
       case 'info':
         return 'Review Booking'
       case 'summary':
@@ -42,17 +42,14 @@ export function MobileBookingBar() {
 
   const handleAction = () => {
     switch (step) {
-      case 'services':
-        if (canProceed) setStep('datetime')
-        break
-      case 'datetime':
+      case 'booking':
         if (canProceed) setStep('info')
         break
       case 'info':
         if (canProceed) setStep('summary')
         break
       case 'summary':
-        // Handled by the policy checkbox + button inside BookingSummary
+        // Handled by policy checkbox + button inside BookingSummary
         break
     }
   }
@@ -88,7 +85,7 @@ export function MobileBookingBar() {
         </Sheet>
       )}
 
-      {/* Action button — hidden on summary step (BookingSummary handles CTA there) */}
+      {/* Action button — hidden on summary step (BookingSummary handles the CTA there) */}
       {step !== 'summary' && (
         <div className="p-3">
           <button

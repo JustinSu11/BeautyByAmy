@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
 import type { Service } from './services-data'
 
-export type BookingStep = 'services' | 'datetime' | 'info' | 'summary'
+export type BookingStep = 'booking' | 'info' | 'summary'
 
 export interface CustomerInfo {
   name: string
@@ -42,7 +42,7 @@ function isValidEmail(email: string): boolean {
 }
 
 export function BookingProvider({ children }: { children: ReactNode }) {
-  const [step, setStep] = useState<BookingStep>('services')
+  const [step, setStep] = useState<BookingStep>('booking')
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
@@ -58,10 +58,8 @@ export function BookingProvider({ children }: { children: ReactNode }) {
 
   const canProceed = (() => {
     switch (step) {
-      case 'services':
-        return selectedService !== null
-      case 'datetime':
-        return selectedDate !== null && selectedTime !== null
+      case 'booking':
+        return selectedService !== null && selectedDate !== null && selectedTime !== null
       case 'info':
         return (
           customerInfo.name.trim().length >= 2 &&
@@ -74,7 +72,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   })()
 
   const reset = useCallback(() => {
-    setStep('services')
+    setStep('booking')
     setSelectedService(null)
     setSelectedDate(null)
     setSelectedTime(null)
