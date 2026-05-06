@@ -1,0 +1,62 @@
+// apps/web/src/app/api/waivers/sign/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/db'
+import { waivers, waiverTokens, bookings, customers } from '@/db/schema'
+import { CURRENT_WAIVER_VERSION } from '@/lib/auth'
+import { appendCustomerNote } from '@/lib/square'
+import { eq, and } from 'drizzle-orm'
+import { z } from 'zod'
+
+const Schema = z.object({
+  token: z.string().uuid(),
+})
+
+export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => null)
+  const parsed = Schema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+  }
+
+  const [tokenRow] = await db
+    .select()
+    .from(waiverTokens)
+    .where(and(eq(waiverTokens.token, parsed.data.token), eq(waiverTokens.used, false)))
+    .limit(1)
+
+  if (!tokenRow || new Date() > tokenRow.expiresAt) {
+    return NextResponse.json({ error: 'Invalid or expired link' }, { status: 400 })
+  }
+
+  const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? null
+
+  await db.insert(waivers).values({
+    customerId: tokenRow.customerId,
+    waiverVersion: CURRENT_WAIVER_VERSION,
+    ipAddress: ip,
+  })
+
+  await db.update(waiverTokens).set({ used: true }).where(eq(waiverTokens.id, tokenRow.id))
+
+  await db.update(bookings).set({ requiresWaiver: false }).where(eq(bookings.id, tokenRow.bookingId))
+
+  const signedAt = new Date().toLocaleDateString('en-US', {
+    year: 'numeric', month: 'long', day: 'numeric',
+  })
+
+  // Get customer's Square ID to update their profile note
+  const [customerRow] = await db
+    .select({ squareCustomerId: customers.squareCustomerId })
+    .from(customers)
+    .where(eq(customers.id, tokenRow.customerId))
+    .limit(1)
+
+  if (customerRow) {
+    await appendCustomerNote(
+      customerRow.squareCustomerId,
+      `Waiver signed (v${CURRENT_WAIVER_VERSION}) on ${signedAt}`
+    )
+  }
+
+  return NextResponse.json({ ok: true })
+}
