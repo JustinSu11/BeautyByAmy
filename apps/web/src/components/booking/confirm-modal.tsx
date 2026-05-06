@@ -108,12 +108,20 @@ export function ConfirmModal({
         return
       }
 
+      const [hourStr, minuteStr] = selectedTime.split(':')
+      const hour = parseInt(hourStr, 10)
+      const minute = parseInt(minuteStr, 10)
+      if (isNaN(hour) || isNaN(minute)) {
+        setError('Invalid time selection. Please go back and re-select a time.')
+        setLoading(false)
+        return
+      }
       const startsAt = new Date(
         selectedDate.getFullYear(),
         selectedDate.getMonth(),
         selectedDate.getDate(),
-        parseInt(selectedTime.split(':')[0]),
-        parseInt(selectedTime.split(':')[1])
+        hour,
+        minute
       ).toISOString()
 
       const bookingRes = await fetch('/api/bookings', {
