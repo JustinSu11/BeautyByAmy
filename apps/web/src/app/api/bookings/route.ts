@@ -80,6 +80,10 @@ export async function POST(req: NextRequest) {
     })
     .returning()
 
+  if (!booking) {
+    return NextResponse.json({ error: 'Booking insert failed' }, { status: 500 })
+  }
+
   // If waiver needed, create a single-use token for the reminder SMS link
   if (needsWaiver) {
     const expiresAt = new Date(startsAt) // token valid until appointment time
