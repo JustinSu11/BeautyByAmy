@@ -16,7 +16,7 @@ export function WaiverForm({ token }: { token: string }) {
       const res = await fetch('/api/waivers/sign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token, agreed: true }),
       })
       if (!res.ok) {
         const data = await res.json()

@@ -1,12 +1,13 @@
 // apps/web/src/lib/auth.ts
 import { getIronSession } from 'iron-session'
+import { randomInt } from 'crypto'
 
 export const OTP_TTL_MS = 10 * 60 * 1000 // 10 minutes
 
 export const CURRENT_WAIVER_VERSION = '2026-05-05'
 
 export function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString()
+  return (100000 + randomInt(0, 900000)).toString()
 }
 
 export function isOtpExpired(expiresAt: Date): boolean {

@@ -21,16 +21,17 @@ export async function POST(req: NextRequest) {
   const { phone } = parsed.data
 
   // Rate limit: one OTP per phone per 60 seconds
-  const recentOtp = await db
-    .select()
-    .from(otpTokens)
-    .where(
-      and(
-        eq(otpTokens.phone, phone),
-        gte(otpTokens.createdAt, new Date(Date.now() - 60_000))
-      )
-    )
-    .limit(1)
+  let recentOtp: typeof otpTokens.$inferSelect[]
+  try {
+    recentOtp = await db
+      .select()
+      .from(otpTokens)
+      .where(and(eq(otpTokens.phone, phone), gte(otpTokens.createdAt, new Date(Date.now() - 60_000))))
+      .limit(1)
+  } catch (err) {
+    console.error('[otp/send] DB rate-limit check failed', { phone, err })
+    return NextResponse.json({ error: 'Service unavailable. Please try again.' }, { status: 503 })
+  }
 
   if (recentOtp.length > 0) {
     return NextResponse.json(
@@ -42,8 +43,26 @@ export async function POST(req: NextRequest) {
   const token = generateOtp()
   const expiresAt = new Date(Date.now() + OTP_TTL_MS)
 
-  await db.insert(otpTokens).values({ phone, token, expiresAt })
-  await sendOtpSms(phone, token)
+  let insertedId: string
+  try {
+    const [inserted] = await db.insert(otpTokens).values({ phone, token, expiresAt }).returning()
+    insertedId = inserted.id
+  } catch (err) {
+    console.error('[otp/send] DB insert failed', { phone, err })
+    return NextResponse.json({ error: 'Service unavailable. Please try again.' }, { status: 503 })
+  }
+
+  try {
+    await sendOtpSms(phone, token)
+  } catch (err) {
+    console.error('[otp/send] SMS send failed', { phone, err })
+    // Roll back the token so the 60s rate limit doesn't strand the user
+    await db.delete(otpTokens).where(eq(otpTokens.id, insertedId)).catch(() => {})
+    return NextResponse.json(
+      { error: 'Failed to send verification code. Please check your number and try again.' },
+      { status: 502 }
+    )
+  }
 
   return NextResponse.json({ ok: true })
 }

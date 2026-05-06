@@ -23,35 +23,40 @@ export async function POST(req: NextRequest) {
 
   const { phone, email, name, token } = parsed.data
 
-  const [row] = await db
-    .select()
-    .from(otpTokens)
-    .where(and(eq(otpTokens.phone, phone), eq(otpTokens.token, token), eq(otpTokens.used, false)))
-    .limit(1)
+  try {
+    const [row] = await db
+      .select()
+      .from(otpTokens)
+      .where(and(eq(otpTokens.phone, phone), eq(otpTokens.token, token), eq(otpTokens.used, false)))
+      .limit(1)
 
-  if (!row || isOtpExpired(row.expiresAt)) {
-    return NextResponse.json({ error: 'Invalid or expired code' }, { status: 401 })
+    if (!row || isOtpExpired(row.expiresAt)) {
+      return NextResponse.json({ error: 'Invalid or expired code' }, { status: 401 })
+    }
+
+    await db.update(otpTokens).set({ used: true }).where(eq(otpTokens.id, row.id))
+
+    const { squareCustomerId } = await upsertSquareCustomer(phone, email, name)
+
+    const [customer] = await db
+      .insert(customers)
+      .values({ squareCustomerId, email, name, phone })
+      .onConflictDoUpdate({
+        target: customers.squareCustomerId,
+        set: { email, name, phone },
+      })
+      .returning()
+
+    const session = await getSession()
+    session.customerId = customer.id
+    session.phone = customer.phone
+    session.email = customer.email
+    session.squareCustomerId = squareCustomerId
+    await session.save()
+
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[otp/verify] Verification failed', { phone, err })
+    return NextResponse.json({ error: 'Verification failed. Please try again.' }, { status: 500 })
   }
-
-  await db.update(otpTokens).set({ used: true }).where(eq(otpTokens.id, row.id))
-
-  const { squareCustomerId } = await upsertSquareCustomer(phone, email, name)
-
-  const [customer] = await db
-    .insert(customers)
-    .values({ squareCustomerId, email, name, phone })
-    .onConflictDoUpdate({
-      target: customers.squareCustomerId,
-      set: { email, name, phone },
-    })
-    .returning()
-
-  const session = await getSession()
-  session.customerId = customer.id
-  session.phone = customer.phone
-  session.email = customer.email
-  session.squareCustomerId = squareCustomerId
-  await session.save()
-
-  return NextResponse.json({ ok: true })
 }

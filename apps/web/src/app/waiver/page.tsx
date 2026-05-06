@@ -4,6 +4,7 @@ import { WaiverForm } from './waiver-form'
 import { db } from '@/db'
 import { waiverTokens } from '@/db/schema'
 import { eq, and } from 'drizzle-orm'
+import { z } from 'zod'
 
 const WAIVER_TEXT = `By signing this consent form, I acknowledge and agree to the following:
 
@@ -26,6 +27,19 @@ export default async function WaiverPage({
 }) {
   const params = await searchParams
   if (!params.token) redirect('/')
+
+  // Validate UUID format before hitting the DB
+  const tokenParsed = z.string().uuid().safeParse(params.token)
+  if (!tokenParsed.success) {
+    return (
+      <main className="mx-auto max-w-xl px-4 py-12 text-center">
+        <h1 className="font-serif text-3xl text-charcoal">Link Expired</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          This waiver link is no longer valid. Please contact BeautyByAmy to receive a new one.
+        </p>
+      </main>
+    )
+  }
 
   // Check if token is valid and not expired
   const [tokenRow] = await db

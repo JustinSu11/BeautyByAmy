@@ -9,6 +9,7 @@ import { z } from 'zod'
 
 const Schema = z.object({
   token: z.string().uuid(),
+  agreed: z.literal(true),
 })
 
 export async function POST(req: NextRequest) {
@@ -30,33 +31,40 @@ export async function POST(req: NextRequest) {
 
   const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? null
 
-  await db.insert(waivers).values({
-    customerId: tokenRow.customerId,
-    waiverVersion: CURRENT_WAIVER_VERSION,
-    ipAddress: ip,
-  })
+  try {
+    await db.insert(waivers).values({
+      customerId: tokenRow.customerId,
+      waiverVersion: CURRENT_WAIVER_VERSION,
+      ipAddress: ip,
+    })
 
-  await db.update(waiverTokens).set({ used: true }).where(eq(waiverTokens.id, tokenRow.id))
+    await db.update(waiverTokens).set({ used: true }).where(eq(waiverTokens.id, tokenRow.id))
 
-  await db.update(bookings).set({ requiresWaiver: false }).where(eq(bookings.id, tokenRow.bookingId))
+    await db.update(bookings).set({ requiresWaiver: false }).where(eq(bookings.id, tokenRow.bookingId))
 
-  const signedAt = new Date().toLocaleDateString('en-US', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  })
+    const signedAt = new Date().toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric',
+    })
 
-  // Get customer's Square ID to update their profile note
-  const [customerRow] = await db
-    .select({ squareCustomerId: customers.squareCustomerId })
-    .from(customers)
-    .where(eq(customers.id, tokenRow.customerId))
-    .limit(1)
+    // Get customer's Square ID to update their profile note
+    const [customerRow] = await db
+      .select({ squareCustomerId: customers.squareCustomerId })
+      .from(customers)
+      .where(eq(customers.id, tokenRow.customerId))
+      .limit(1)
 
-  if (customerRow) {
-    await appendCustomerNote(
-      customerRow.squareCustomerId,
-      `Waiver signed (v${CURRENT_WAIVER_VERSION}) on ${signedAt}`
-    )
+    if (customerRow) {
+      await appendCustomerNote(
+        customerRow.squareCustomerId,
+        `Waiver signed (v${CURRENT_WAIVER_VERSION}) on ${signedAt}`
+      )
+    } else {
+      console.error('[waivers/sign] No customer row found', { customerId: tokenRow.customerId })
+    }
+
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[waivers/sign] Failed to record waiver', { err })
+    return NextResponse.json({ error: 'Failed to record waiver. Please try again.' }, { status: 500 })
   }
-
-  return NextResponse.json({ ok: true })
 }

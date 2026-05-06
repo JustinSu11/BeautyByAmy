@@ -11,7 +11,7 @@ declare global {
       payments: (appId: string, locationId: string) => Promise<{
         card: () => Promise<{
           attach: (selector: string) => Promise<void>
-          tokenize: () => Promise<{ status: string; token?: string; errors?: { message: string }[] }>
+          tokenize: () => Promise<{ status: 'OK' | 'Cancel' | 'Error' | 'Unknown'; token?: string; errors?: { message: string }[] }>
         }>
       }>
     }
@@ -39,7 +39,7 @@ export function ConfirmModal({
   const [otp, setOtp] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const cardRef = useRef<{ tokenize: () => Promise<{ status: string; token?: string; errors?: { message: string }[] }> } | null>(null)
+  const cardRef = useRef<{ tokenize: () => Promise<{ status: 'OK' | 'Cancel' | 'Error' | 'Unknown'; token?: string; errors?: { message: string }[] }> } | null>(null)
 
   // Load Square Web Payments SDK and attach card form
   useEffect(() => {
@@ -50,13 +50,22 @@ export function ConfirmModal({
         ? 'https://web.squarecdn.com/v1/square.js'
         : 'https://sandbox.web.squarecdn.com/v1/square.js'
     script.onload = async () => {
-      const payments = await window.Square!.payments(
-        process.env.NEXT_PUBLIC_SQUARE_APPLICATION_ID!,
-        process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!
-      )
-      const card = await payments.card()
-      await card.attach('#square-card-container')
-      cardRef.current = card
+      try {
+        if (!window.Square) throw new Error('Square SDK not available')
+        const payments = await window.Square.payments(
+          process.env.NEXT_PUBLIC_SQUARE_APPLICATION_ID!,
+          process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!
+        )
+        const card = await payments.card()
+        await card.attach('#square-card-container')
+        cardRef.current = card
+      } catch (err) {
+        console.error('[ConfirmModal] Square SDK init failed', err)
+        setError('Payment form failed to load. Please refresh and try again.')
+      }
+    }
+    script.onerror = () => {
+      setError('Payment form failed to load. Please refresh and try again.')
     }
     document.head.appendChild(script)
     return () => { document.head.removeChild(script) }
@@ -221,11 +230,21 @@ export function ConfirmModal({
             <button
               type="button"
               onClick={async () => {
-                await fetch('/api/auth/otp/send', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ phone: customerInfo.phone }),
-                })
+                try {
+                  const res = await fetch('/api/auth/otp/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: customerInfo.phone }),
+                  })
+                  if (!res.ok) {
+                    const data = await res.json().catch(() => ({}))
+                    setError(data.error ?? 'Failed to resend code. Please try again.')
+                  } else {
+                    setError(null)
+                  }
+                } catch {
+                  setError('Failed to resend code. Please check your connection.')
+                }
               }}
               className="mt-3 w-full cursor-pointer text-sm text-muted-foreground underline-offset-2 hover:underline"
             >
