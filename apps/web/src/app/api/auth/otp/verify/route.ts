@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
     .insert(customers)
     .values({ squareCustomerId, email, name, phone })
     .onConflictDoUpdate({
-      target: customers.email,
-      set: { squareCustomerId, name, phone },
+      target: customers.squareCustomerId,
+      set: { email, name, phone },
     })
     .returning()
 

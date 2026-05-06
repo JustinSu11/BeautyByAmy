@@ -1,6 +1,9 @@
 // apps/web/src/app/waiver/page.tsx
 import { redirect } from 'next/navigation'
 import { WaiverForm } from './waiver-form'
+import { db } from '@/db'
+import { waiverTokens } from '@/db/schema'
+import { eq, and } from 'drizzle-orm'
 
 const WAIVER_TEXT = `By signing this consent form, I acknowledge and agree to the following:
 
@@ -23,6 +26,24 @@ export default async function WaiverPage({
 }) {
   const params = await searchParams
   if (!params.token) redirect('/')
+
+  // Check if token is valid and not expired
+  const [tokenRow] = await db
+    .select()
+    .from(waiverTokens)
+    .where(and(eq(waiverTokens.token, params.token as string), eq(waiverTokens.used, false)))
+    .limit(1)
+
+  if (!tokenRow || new Date() > tokenRow.expiresAt) {
+    return (
+      <main className="mx-auto max-w-xl px-4 py-12 text-center">
+        <h1 className="font-serif text-3xl text-charcoal">Link Expired</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          This waiver link is no longer valid. Please contact BeautyByAmy to receive a new one.
+        </p>
+      </main>
+    )
+  }
 
   return (
     <main className="mx-auto max-w-xl px-4 py-12">
