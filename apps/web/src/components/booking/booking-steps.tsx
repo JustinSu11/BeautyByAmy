@@ -61,7 +61,7 @@ export function BookingSteps() {
               <button
                 type="button"
                 onClick={() => setStep('info')}
-                className="mt-8 flex items-center gap-2 rounded-lg bg-gold px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-gold-dark"
+                className="mt-8 flex cursor-pointer items-center gap-2 rounded-lg bg-gold px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-gold-dark"
               >
                 Continue to Your Info
                 <ArrowRight className="h-4 w-4" />
@@ -85,7 +85,7 @@ export function BookingSteps() {
             <button
               type="button"
               onClick={() => setStep('booking')}
-              className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="mb-4 flex cursor-pointer items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to appointment
@@ -180,7 +180,7 @@ export function BookingSteps() {
               type="button"
               onClick={() => setStep('summary')}
               disabled={!canProceed}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-gold px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-50"
             >
               Review Booking
               <ArrowRight className="h-4 w-4" />
@@ -202,7 +202,7 @@ export function BookingSteps() {
           <button
             type="button"
             onClick={() => setStep('info')}
-            className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="mb-4 flex cursor-pointer items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to your info

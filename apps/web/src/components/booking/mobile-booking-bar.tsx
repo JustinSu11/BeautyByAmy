@@ -62,7 +62,7 @@ export function MobileBookingBar() {
           <SheetTrigger asChild>
             <button
               type="button"
-              className="flex w-full items-center justify-between border-b border-border px-4 py-2.5 text-sm"
+              className="flex w-full cursor-pointer items-center justify-between border-b border-border px-4 py-2.5 text-sm"
             >
               <div className="flex items-center gap-3">
                 <span className="max-w-[180px] truncate text-muted-foreground">{selectedService.name}</span>
@@ -95,7 +95,7 @@ export function MobileBookingBar() {
             className={cn(
               'flex w-full items-center justify-center rounded-lg px-6 py-3.5 text-sm font-semibold transition-all',
               canProceed
-                ? 'bg-gold text-primary-foreground shadow-sm hover:bg-gold-dark active:scale-[0.98]'
+                ? 'cursor-pointer bg-gold text-primary-foreground shadow-sm hover:bg-gold-dark active:scale-[0.98]'
                 : 'cursor-not-allowed bg-muted text-muted-foreground'
             )}
           >

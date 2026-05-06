@@ -141,7 +141,7 @@ export function BookingSummary({ className }: { className?: string }) {
             </button>
           )}
 
-          {modalOpen && (
+          {modalOpen && !confirmed && (
             <ConfirmModal
               onClose={() => setModalOpen(false)}
               onSuccess={() => {

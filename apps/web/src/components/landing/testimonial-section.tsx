@@ -125,7 +125,7 @@ export function TestimonialSection() {
           <button
             type="button"
             onClick={prev}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-card/20 text-card/50 transition-colors hover:border-gold hover:text-gold"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-card/20 text-card/50 transition-colors hover:border-gold hover:text-gold"
             aria-label="Previous testimonial"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -139,7 +139,7 @@ export function TestimonialSection() {
                 type="button"
                 onClick={() => goTo(i)}
                 className={cn(
-                  'h-1.5 rounded-full transition-all',
+                  'h-1.5 cursor-pointer rounded-full transition-all',
                   i === current ? 'w-6 bg-gold' : 'w-1.5 bg-card/30 hover:bg-card/50'
                 )}
                 aria-label={`Go to testimonial ${i + 1}`}
@@ -150,7 +150,7 @@ export function TestimonialSection() {
           <button
             type="button"
             onClick={next}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-card/20 text-card/50 transition-colors hover:border-gold hover:text-gold"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-card/20 text-card/50 transition-colors hover:border-gold hover:text-gold"
             aria-label="Next testimonial"
           >
             <ChevronRight className="h-4 w-4" />
