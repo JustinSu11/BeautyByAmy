@@ -37,19 +37,14 @@ export async function POST(req: NextRequest) {
 
   const { squareCustomerId } = await upsertSquareCustomer(phone, email, name)
 
-  let [customer] = await db
-    .select()
-    .from(customers)
-    .where(eq(customers.phone, phone))
-    .limit(1)
-
-  if (!customer) {
-    const [created] = await db
-      .insert(customers)
-      .values({ squareCustomerId, email, name, phone })
-      .returning()
-    customer = created
-  }
+  const [customer] = await db
+    .insert(customers)
+    .values({ squareCustomerId, email, name, phone })
+    .onConflictDoUpdate({
+      target: customers.email,
+      set: { squareCustomerId, name, phone },
+    })
+    .returning()
 
   const session = await getSession()
   session.customerId = customer.id
