@@ -1,9 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { useBooking } from '@/lib/booking-context'
 import { formatDuration, formatPrice } from '@/lib/services-data'
 import { Calendar, Clock, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ConfirmModal } from './confirm-modal'
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -23,6 +25,9 @@ function formatTimeLabel(time: string): string {
 }
 
 export function BookingSummary({ className }: { className?: string }) {
+  const [modalOpen, setModalOpen] = useState(false)
+  const [confirmed, setConfirmed] = useState(false)
+
   const {
     selectedService,
     selectedDate,
@@ -111,23 +116,42 @@ export function BookingSummary({ className }: { className?: string }) {
             </span>
           </label>
 
-          <button
-            type="button"
-            disabled={!policyAccepted}
-            onClick={() => {
-              // Waiver signing flow — TBD with Amy
-              alert('Booking confirmed! Waiver signing coming soon.')
-            }}
-            className={cn(
-              'mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-sm font-semibold transition-colors',
-              policyAccepted
-                ? 'bg-charcoal text-primary-foreground hover:bg-charcoal/90'
-                : 'cursor-not-allowed bg-muted text-muted-foreground'
-            )}
-          >
-            <Shield className="h-4 w-4" />
-            Confirm Booking
-          </button>
+          {confirmed ? (
+            <div className="mt-4 rounded-lg bg-gold/10 p-4 text-center">
+              <p className="font-serif text-lg text-charcoal">Booking Confirmed!</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Check your phone for a confirmation text. If your service requires a
+                consent form, you&apos;ll receive a link before your appointment.
+              </p>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={!policyAccepted}
+              onClick={() => setModalOpen(true)}
+              className={cn(
+                'mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-sm font-semibold transition-colors',
+                policyAccepted
+                  ? 'bg-charcoal text-primary-foreground hover:bg-charcoal/90'
+                  : 'cursor-not-allowed bg-muted text-muted-foreground'
+              )}
+            >
+              <Shield className="h-4 w-4" />
+              Confirm Booking
+            </button>
+          )}
+
+          {modalOpen && !confirmed && (
+            <ConfirmModal
+              onClose={() => setModalOpen(false)}
+              onSuccess={() => {
+                setModalOpen(false)
+                setConfirmed(true)
+              }}
+              serviceVariationId="PLACEHOLDER_SERVICE_VARIATION_ID"
+              teamMemberId="PLACEHOLDER_TEAM_MEMBER_ID"
+            />
+          )}
 
           {selectedService.requiresDeposit && (
             <p className="mt-2 text-center text-xs text-muted-foreground">
@@ -144,7 +168,7 @@ export function BookingSummary({ className }: { className?: string }) {
             type="button"
             onClick={() => setStep('info')}
             disabled={!canProceed}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-gold px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-50"
           >
             Continue to Your Info
           </button>

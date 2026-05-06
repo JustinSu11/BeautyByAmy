@@ -35,7 +35,7 @@ export function ServiceDropdown() {
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          'flex w-full items-center justify-between rounded-xl border bg-card px-4 py-3.5 text-left transition-colors',
+          'flex w-full cursor-pointer items-center justify-between rounded-xl border bg-card px-4 py-3.5 text-left transition-colors',
           open ? 'border-gold ring-2 ring-gold/20' : 'border-border hover:border-gold/50'
         )}
         aria-haspopup="listbox"
@@ -85,7 +85,7 @@ export function ServiceDropdown() {
                       aria-selected={isSelected}
                       onClick={() => handleSelect(service)}
                       className={cn(
-                        'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-secondary',
+                        'flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-secondary',
                         isSelected && 'bg-gold/5'
                       )}
                     >

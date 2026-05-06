@@ -75,7 +75,7 @@ export function TimeSlotGrid() {
                         ? 'border-gold bg-gold text-primary-foreground shadow-sm'
                         : isUnavailable
                           ? 'border-transparent bg-muted/50 text-muted-foreground/40 cursor-not-allowed'
-                          : 'border-border bg-card text-foreground hover:border-gold-light hover:text-gold-dark'
+                          : 'cursor-pointer border-border bg-card text-foreground hover:border-gold-light hover:text-gold-dark'
                     )}
                     aria-label={`${slot.label}${isUnavailable ? ' (unavailable)' : ''}`}
                     aria-pressed={isSelected}

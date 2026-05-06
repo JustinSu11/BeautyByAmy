@@ -122,7 +122,7 @@ export function SiteNav() {
               <button
                 type="button"
                 className={cn(
-                  'flex h-10 w-10 items-center justify-center rounded-full transition-colors',
+                  'flex h-10 w-10 cursor-pointer items-center justify-center rounded-full transition-colors',
                   scrolled || !isHome
                     ? 'text-charcoal hover:bg-secondary'
                     : 'text-card hover:bg-card/10'

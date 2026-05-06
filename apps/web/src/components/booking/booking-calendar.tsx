@@ -80,7 +80,7 @@ export function BookingCalendar() {
         <button
           onClick={prevMonth}
           disabled={!canGoPrev}
-          className="flex h-8 w-8 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed"
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-30"
           aria-label="Previous month"
           type="button"
         >
@@ -91,7 +91,7 @@ export function BookingCalendar() {
         </h3>
         <button
           onClick={nextMonth}
-          className="flex h-8 w-8 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary"
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary"
           aria-label="Next month"
           type="button"
         >

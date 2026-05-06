@@ -9,6 +9,8 @@ export interface Service {
   description?: string
   /** True for high-investment services (PMU + full lash sets) that require a booking deposit */
   requiresDeposit?: boolean
+  /** True for PMU and first-time lash services that require a signed consent waiver */
+  requiresWaiver?: boolean
 }
 
 export const categories = [
@@ -87,6 +89,37 @@ const DEPOSIT_REQUIRED = new Set([
   'service27', // Classic Set
 ])
 
+/** Services that require a signed consent waiver before the appointment */
+const WAIVER_REQUIRED = new Set([
+  // Permanent Makeup — all pigment/technique services (not consultation or patch test)
+  'service8',  // Ombré
+  'service9',  // Microshading Cover-Up
+  'service10', // Lip blush
+  'service12', // Microblading
+  'service13', // Microshading
+  'service14', // Ombré Cover-Up
+  'service19', // Cover-Up with Correction
+  'service21', // Brow Color Refresh 6mo–1yr
+  'service22', // Brow Color Refresh 12–20mo
+  'service23', // Brow Color Refresh 8wk–6mo
+  'service31', // Additional Correction/Touch Up
+  // Lash extensions and lifts — all sets and fills
+  'service1',  // Touch Up
+  'service2',  // Volume Set
+  'service3',  // Volume 7-14 days
+  'service4',  // Volume 15-21 days
+  'service5',  // Volume 22-28 days
+  'service15', // Hybrid Set
+  'service16', // Hybrid 7-14 days
+  'service17', // Hybrid 15-21 days
+  'service18', // Hybrid 22-28 days
+  'service20', // Color Splash-Ins
+  'service27', // Classic Set
+  'service28', // Classic 7-14 days
+  'service29', // Classic 15-21 days
+  'service30', // Classic 22-28 days
+])
+
 export const services: Service[] = RAW_SERVICES.map((s) => ({
   id: s.id,
   name: s.name,
@@ -94,6 +127,7 @@ export const services: Service[] = RAW_SERVICES.map((s) => ({
   duration: parseDuration(s.time),
   price: typeof s.price === 'string' ? 0 : s.price,
   requiresDeposit: DEPOSIT_REQUIRED.has(s.id),
+  requiresWaiver: WAIVER_REQUIRED.has(s.id),
 }))
 
 export function getServicesByCategory(category: string): Service[] {

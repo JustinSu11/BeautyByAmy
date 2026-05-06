@@ -30,7 +30,7 @@ export function ServiceList() {
               aria-selected={isActive}
               onClick={() => setActiveCategory(cat.id)}
               className={cn(
-                'flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-all',
+                'flex shrink-0 cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-all',
                 isActive
                   ? 'bg-charcoal text-primary-foreground shadow-sm'
                   : 'bg-secondary text-secondary-foreground hover:bg-muted'
