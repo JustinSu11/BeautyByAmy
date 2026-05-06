@@ -69,6 +69,7 @@ export async function saveCardOnFile(
 export async function createSquareAppointment(params: {
   squareCustomerId: string
   serviceVariationId: string
+  serviceVariationVersion?: bigint
   teamMemberId: string
   startsAt: string
   durationMinutes: number
@@ -82,6 +83,7 @@ export async function createSquareAppointment(params: {
       appointmentSegments: [
         {
           serviceVariationId: params.serviceVariationId,
+          serviceVariationVersion: params.serviceVariationVersion,
           teamMemberId: params.teamMemberId,
           durationMinutes: params.durationMinutes,
         },
@@ -102,5 +104,10 @@ export async function appendCustomerNote(
   const getResult = await squareClient.customers.get({ customerId: squareCustomerId })
   const existing = getResult.customer?.note ?? ''
   const updated = existing ? `${existing}\n${note}` : note
-  await squareClient.customers.update({ customerId: squareCustomerId, note: updated })
+  const version = getResult.customer?.version
+  await squareClient.customers.update({
+    customerId: squareCustomerId,
+    note: updated,
+    ...(version !== undefined && { version }),
+  })
 }
