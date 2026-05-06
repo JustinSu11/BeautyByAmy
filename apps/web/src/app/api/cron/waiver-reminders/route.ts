@@ -34,6 +34,8 @@ export async function GET(req: NextRequest) {
       )
     )
 
+  let sent = 0
+
   for (const booking of pendingBookings) {
     const [tokenRow] = await db
       .select()
@@ -55,9 +57,14 @@ export async function GET(req: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://beautybyamy.com'
     const waiverUrl = `${baseUrl}/waiver?token=${tokenRow.token}`
 
-    await sendWaiverReminderSms(booking.phone, booking.name, appointmentDate, waiverUrl)
-    await db.update(bookings).set({ waiverSent: true }).where(eq(bookings.id, booking.bookingId))
+    try {
+      await sendWaiverReminderSms(booking.phone, booking.name, appointmentDate, waiverUrl)
+      await db.update(bookings).set({ waiverSent: true }).where(eq(bookings.id, booking.bookingId))
+      sent++
+    } catch (err) {
+      console.error(`Failed to send waiver reminder for booking ${booking.bookingId}:`, err)
+    }
   }
 
-  return NextResponse.json({ sent: pendingBookings.length })
+  return NextResponse.json({ sent })
 }
