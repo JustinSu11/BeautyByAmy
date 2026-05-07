@@ -15,6 +15,13 @@
       "when": 1746569200000,
       "tag": "0001_waiver_received_column",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1746569400000,
+      "tag": "0002_waiver_received_at_timestamp",
+      "breakpoints": true
     }
   ]
 }
