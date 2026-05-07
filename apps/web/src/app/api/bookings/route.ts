@@ -4,7 +4,7 @@ import { db } from '@/db'
 import { bookings, waivers, waiverTokens } from '@/db/schema'
 import { getSession, CURRENT_WAIVER_VERSION } from '@/lib/auth'
 import { saveCardOnFile, createSquareAppointment } from '@/lib/square'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, gt } from 'drizzle-orm'
 import { z } from 'zod'
 
 const Schema = z.object({
@@ -77,7 +77,8 @@ export async function POST(req: NextRequest) {
       .where(
         and(
           eq(waivers.customerId, session.customerId),
-          eq(waivers.waiverVersion, CURRENT_WAIVER_VERSION)
+          eq(waivers.waiverVersion, CURRENT_WAIVER_VERSION),
+          gt(waivers.expiresAt, new Date())
         )
       )
       .limit(1)
@@ -95,7 +96,6 @@ export async function POST(req: NextRequest) {
         serviceId,
         startsAt: new Date(startsAt),
         requiresWaiver: needsWaiver,
-        waiverSent: false,
       })
       .returning()
 
