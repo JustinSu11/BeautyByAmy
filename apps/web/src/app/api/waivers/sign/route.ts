@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     await db.update(waiverTokens).set({ used: true }).where(eq(waiverTokens.id, tokenRow.id))
 
-    await db.update(bookings).set({ requiresWaiver: false }).where(eq(bookings.id, tokenRow.bookingId))
+    await db.update(bookings).set({ waiverReceived: true }).where(eq(bookings.id, tokenRow.bookingId))
 
     const signedAt = new Date().toLocaleDateString('en-US', {
       year: 'numeric', month: 'long', day: 'numeric',

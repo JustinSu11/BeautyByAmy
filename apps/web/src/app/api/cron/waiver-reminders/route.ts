@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
     .where(
       and(
         eq(bookings.requiresWaiver, true),
+        eq(bookings.waiverReceived, false),
         eq(bookings.waiverSent, false),
         gte(bookings.startsAt, now),
         lte(bookings.startsAt, threeDaysFromNow)
@@ -43,7 +44,8 @@ export async function GET(req: NextRequest) {
       .where(
         and(
           eq(waiverTokens.bookingId, booking.bookingId),
-          eq(waiverTokens.used, false)
+          eq(waiverTokens.used, false),
+          gte(waiverTokens.expiresAt, now)
         )
       )
       .limit(1)

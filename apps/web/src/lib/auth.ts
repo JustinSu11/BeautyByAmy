@@ -15,10 +15,17 @@ export function isOtpExpired(expiresAt: Date): boolean {
 }
 
 export interface SessionData {
-  customerId: string
-  phone: string
-  email: string
-  squareCustomerId: string
+  customerId?: string
+  phone?: string
+  email?: string
+  squareCustomerId?: string
+}
+
+/** Narrows a session to a verified authenticated state. */
+export function isAuthenticated(
+  session: SessionData
+): session is Required<SessionData> {
+  return !!(session.customerId && session.phone && session.email && session.squareCustomerId)
 }
 
 export async function getSession() {
