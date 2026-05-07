@@ -4,6 +4,7 @@ import { db } from '@/db'
 import { waivers, waiverTokens, bookings, customers } from '@/db/schema'
 import { CURRENT_WAIVER_VERSION } from '@/lib/auth'
 import { appendCustomerNote } from '@/lib/square'
+import { services } from '@/lib/services-data'
 import { eq, and } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -20,8 +21,16 @@ export async function POST(req: NextRequest) {
   }
 
   const [tokenRow] = await db
-    .select()
+    .select({
+      id: waiverTokens.id,
+      customerId: waiverTokens.customerId,
+      bookingId: waiverTokens.bookingId,
+      expiresAt: waiverTokens.expiresAt,
+      used: waiverTokens.used,
+      serviceId: bookings.serviceId,
+    })
     .from(waiverTokens)
+    .innerJoin(bookings, eq(bookings.id, waiverTokens.bookingId))
     .where(and(eq(waiverTokens.token, parsed.data.token), eq(waiverTokens.used, false)))
     .limit(1)
 
@@ -31,10 +40,15 @@ export async function POST(req: NextRequest) {
 
   const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? null
 
+  const service = services.find((s) => s.id === tokenRow.serviceId)
+  const validityDays = service?.waiverValidityDays ?? 365
+  const waiverExpiresAt = new Date(Date.now() + validityDays * 24 * 60 * 60 * 1000)
+
   try {
     await db.insert(waivers).values({
       customerId: tokenRow.customerId,
       waiverVersion: CURRENT_WAIVER_VERSION,
+      expiresAt: waiverExpiresAt,
       ipAddress: ip,
     })
 

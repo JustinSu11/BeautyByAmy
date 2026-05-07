@@ -27,7 +27,7 @@ export const bookings = pgTable('bookings', {
   startsAt: timestamp('starts_at').notNull(),
   requiresWaiver: boolean('requires_waiver').default(false).notNull(),
   waiverReceivedAt: timestamp('waiver_received_at'),
-  waiverSent: boolean('waiver_sent').default(false).notNull(),
+  waiverSentAt: timestamp('waiver_sent_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
@@ -46,6 +46,7 @@ export const waivers = pgTable('waivers', {
   customerId: uuid('customer_id').references(() => customers.id).notNull(),
   waiverVersion: text('waiver_version').notNull(),
   signedAt: timestamp('signed_at').defaultNow().notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
   ipAddress: text('ip_address'),
 })
 

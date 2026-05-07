@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
       and(
         eq(bookings.requiresWaiver, true),
         isNull(bookings.waiverReceivedAt),
-        eq(bookings.waiverSent, false),
+        isNull(bookings.waiverSentAt),
         gte(bookings.startsAt, now),
         lte(bookings.startsAt, threeDaysFromNow)
       )
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
 
     try {
       await sendWaiverReminderSms(booking.phone, booking.name, appointmentDate, waiverUrl)
-      await db.update(bookings).set({ waiverSent: true }).where(eq(bookings.id, booking.bookingId))
+      await db.update(bookings).set({ waiverSentAt: new Date() }).where(eq(bookings.id, booking.bookingId))
       sent++
     } catch (err) {
       console.error(`Failed to send waiver reminder for booking ${booking.bookingId}:`, err)

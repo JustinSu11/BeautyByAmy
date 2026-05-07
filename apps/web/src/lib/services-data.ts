@@ -11,6 +11,8 @@ export interface Service {
   requiresDeposit?: boolean
   /** True for PMU and first-time lash services that require a signed consent waiver */
   requiresWaiver?: boolean
+  /** Days a signed waiver remains valid for this service. Only set when requiresWaiver is true. */
+  waiverValidityDays?: number
 }
 
 export const categories = [
@@ -120,6 +122,21 @@ const WAIVER_REQUIRED = new Set([
   'service30', // Classic 22-28 days
 ])
 
+/**
+ * How long a signed waiver is valid for each service (in days).
+ * Lash services renew annually; PMU waivers cover the full touch-up cycle.
+ */
+const WAIVER_VALIDITY_DAYS: Record<string, number> = {
+  // Lash services — 1 year
+  'service1': 365, 'service2': 365, 'service3': 365, 'service4': 365, 'service5': 365,
+  'service15': 365, 'service16': 365, 'service17': 365, 'service18': 365,
+  'service20': 365, 'service27': 365, 'service28': 365, 'service29': 365, 'service30': 365,
+  // PMU services — 2 years
+  'service8': 730, 'service9': 730, 'service10': 730, 'service12': 730, 'service13': 730,
+  'service14': 730, 'service19': 730, 'service21': 730, 'service22': 730,
+  'service23': 730, 'service31': 730,
+}
+
 export const services: Service[] = RAW_SERVICES.map((s) => ({
   id: s.id,
   name: s.name,
@@ -128,6 +145,7 @@ export const services: Service[] = RAW_SERVICES.map((s) => ({
   price: typeof s.price === 'string' ? 0 : s.price,
   requiresDeposit: DEPOSIT_REQUIRED.has(s.id),
   requiresWaiver: WAIVER_REQUIRED.has(s.id),
+  waiverValidityDays: WAIVER_VALIDITY_DAYS[s.id],
 }))
 
 export function getServicesByCategory(category: string): Service[] {
