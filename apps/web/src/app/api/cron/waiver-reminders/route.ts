@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/db'
 import { bookings, customers, waiverTokens } from '@/db/schema'
 import { sendWaiverReminderSms } from '@/lib/sms'
-import { eq, and, lte, gte } from 'drizzle-orm'
+import { eq, and, lte, gte, isNull } from 'drizzle-orm'
 
 // Secured with a secret header — Vercel sends this automatically
 export async function GET(req: NextRequest) {
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     .where(
       and(
         eq(bookings.requiresWaiver, true),
-        eq(bookings.waiverReceived, false),
+        isNull(bookings.waiverReceivedAt),
         eq(bookings.waiverSent, false),
         gte(bookings.startsAt, now),
         lte(bookings.startsAt, threeDaysFromNow)
