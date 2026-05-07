@@ -8,6 +8,13 @@
       "when": 1778026244842,
       "tag": "0000_melted_riptide",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1746569200000,
+      "tag": "0001_waiver_received_column",
+      "breakpoints": true
     }
   ]
 }

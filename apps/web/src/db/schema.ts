@@ -26,6 +26,7 @@ export const bookings = pgTable('bookings', {
   serviceId: text('service_id').notNull(),
   startsAt: timestamp('starts_at').notNull(),
   requiresWaiver: boolean('requires_waiver').default(false).notNull(),
+  waiverReceived: boolean('waiver_received').default(false).notNull(),
   waiverSent: boolean('waiver_sent').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })

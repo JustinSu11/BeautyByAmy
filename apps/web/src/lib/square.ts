@@ -7,7 +7,7 @@ const environment =
     : SquareEnvironment.Sandbox
 
 export const squareClient = new SquareClient({
-  token: process.env.SQUARE_ACCESS_TOKEN!,
+  token: process.env.SQUARE_ACCESS_TOKEN ?? '',
   environment,
 })
 
@@ -29,7 +29,9 @@ export async function upsertSquareCustomer(
   })
 
   if (searchResult.customers && searchResult.customers.length > 0) {
-    return { squareCustomerId: searchResult.customers[0].id! }
+    const id = searchResult.customers[0].id
+    if (!id) throw new Error('Square returned a customer with no ID')
+    return { squareCustomerId: id }
   }
 
   const parts = name.trim().split(' ')
@@ -41,7 +43,9 @@ export async function upsertSquareCustomer(
     referenceId: 'bba-web',
   })
 
-  return { squareCustomerId: createResult.customer!.id! }
+  const id = createResult.customer?.id
+  if (!id) throw new Error('Square customer creation returned no customer ID')
+  return { squareCustomerId: id }
 }
 
 /**
@@ -59,7 +63,9 @@ export async function saveCardOnFile(
       customerId: squareCustomerId,
     },
   })
-  return result.card!.id!
+  const cardId = result.card?.id
+  if (!cardId) throw new Error('Square card creation returned no card ID')
+  return cardId
 }
 
 /**
@@ -90,7 +96,9 @@ export async function createSquareAppointment(params: {
       ],
     },
   })
-  return result.booking!.id!
+  const bookingId = result.booking?.id
+  if (!bookingId) throw new Error('Square appointment creation returned no booking ID')
+  return bookingId
 }
 
 /**
