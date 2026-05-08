@@ -1,14 +1,16 @@
-// apps/web/src/app/api/bookings/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/db'
-import { bookings, waivers, waiverTokens } from '@/db/schema'
-import { getSession, CURRENT_WAIVER_VERSION } from '@/lib/auth'
-import { saveCardOnFile, createSquareAppointment } from '@/lib/square'
+import { bookings, customers, waivers, waiverTokens } from '@/db/schema'
+import { CURRENT_WAIVER_VERSION } from '@/lib/auth'
+import { upsertSquareCustomer, saveCardOnFile, createSquareAppointment } from '@/lib/square'
 import { eq, and, gt } from 'drizzle-orm'
 import { z } from 'zod'
 
 const Schema = z.object({
   sourceId: z.string(),
+  name: z.string().min(2),
+  phone: z.string().min(7),
+  email: z.string().email(),
   serviceVariationId: z.string(),
   teamMemberId: z.string(),
   startsAt: z.string(),
@@ -18,11 +20,6 @@ const Schema = z.object({
 })
 
 export async function POST(req: NextRequest) {
-  const session = await getSession()
-  if (!session.customerId) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-  }
-
   const body = await req.json().catch(() => null)
   const parsed = Schema.safeParse(body)
   if (!parsed.success) {
@@ -31,6 +28,9 @@ export async function POST(req: NextRequest) {
 
   const {
     sourceId,
+    name,
+    phone,
+    email,
     serviceVariationId,
     teamMemberId,
     startsAt,
@@ -39,11 +39,32 @@ export async function POST(req: NextRequest) {
     requiresWaiver,
   } = parsed.data
 
+  // Upsert Square customer and local customer record
+  let squareCustomerId: string
+  let customerId: string
+  try {
+    const result = await upsertSquareCustomer(phone, email, name)
+    squareCustomerId = result.squareCustomerId
+
+    const [customer] = await db
+      .insert(customers)
+      .values({ squareCustomerId, email, name, phone })
+      .onConflictDoUpdate({
+        target: customers.squareCustomerId,
+        set: { email, name, phone },
+      })
+      .returning()
+    customerId = customer.id
+  } catch (err) {
+    console.error('[bookings] Customer upsert failed', { phone, err })
+    return NextResponse.json({ error: 'Unable to create customer profile. Please try again.' }, { status: 500 })
+  }
+
   // Save card on file to Square — Amy can charge this for no-shows
   try {
-    await saveCardOnFile(session.squareCustomerId, sourceId)
+    await saveCardOnFile(squareCustomerId, sourceId)
   } catch (err) {
-    console.error('[bookings] saveCardOnFile failed', { squareCustomerId: session.squareCustomerId, err })
+    console.error('[bookings] saveCardOnFile failed', { squareCustomerId, err })
     return NextResponse.json(
       { error: 'Unable to save your card. Please check your card details and try again.' },
       { status: 402 }
@@ -54,21 +75,21 @@ export async function POST(req: NextRequest) {
   let squareBookingId: string
   try {
     squareBookingId = await createSquareAppointment({
-      squareCustomerId: session.squareCustomerId,
+      squareCustomerId,
       serviceVariationId,
       teamMemberId,
       startsAt,
       durationMinutes,
     })
   } catch (err) {
-    console.error('[bookings] createSquareAppointment failed', { squareCustomerId: session.squareCustomerId, err })
+    console.error('[bookings] createSquareAppointment failed', { squareCustomerId, err })
     return NextResponse.json(
       { error: 'Unable to create your appointment. Please try again or contact us directly.' },
       { status: 502 }
     )
   }
 
-  // Check if this customer already has a signed waiver for the current version
+  // Check if this customer already has a valid unexpired waiver for the current version
   let needsWaiver = false
   if (requiresWaiver) {
     const [existingWaiver] = await db
@@ -76,7 +97,7 @@ export async function POST(req: NextRequest) {
       .from(waivers)
       .where(
         and(
-          eq(waivers.customerId, session.customerId),
+          eq(waivers.customerId, customerId),
           eq(waivers.waiverVersion, CURRENT_WAIVER_VERSION),
           gt(waivers.expiresAt, new Date())
         )
@@ -92,10 +113,11 @@ export async function POST(req: NextRequest) {
       .insert(bookings)
       .values({
         squareBookingId,
-        customerId: session.customerId,
+        customerId,
         serviceId,
         startsAt: new Date(startsAt),
         requiresWaiver: needsWaiver,
+        waiverSentAt: null,
       })
       .returning()
 
@@ -104,11 +126,10 @@ export async function POST(req: NextRequest) {
     }
     booking = inserted
 
-    // If waiver needed, create a single-use token for the reminder SMS link
     if (needsWaiver) {
-      const expiresAt = new Date(startsAt) // token valid until appointment time
+      const expiresAt = new Date(startsAt)
       await db.insert(waiverTokens).values({
-        customerId: session.customerId,
+        customerId,
         bookingId: booking.id,
         expiresAt,
       })

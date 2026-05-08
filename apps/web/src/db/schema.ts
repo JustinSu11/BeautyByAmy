@@ -10,15 +10,6 @@ export const customers = pgTable('customers', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
-export const otpTokens = pgTable('otp_tokens', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  phone: text('phone').notNull(),
-  token: text('token').notNull(),
-  expiresAt: timestamp('expires_at').notNull(),
-  used: boolean('used').default(false).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-})
-
 export const bookings = pgTable('bookings', {
   id: uuid('id').primaryKey().defaultRandom(),
   squareBookingId: text('square_booking_id').unique().notNull(),
@@ -51,7 +42,6 @@ export const waivers = pgTable('waivers', {
 })
 
 export type Customer = typeof customers.$inferSelect
-export type OtpToken = typeof otpTokens.$inferSelect
 export type Booking = typeof bookings.$inferSelect
 export type WaiverToken = typeof waiverTokens.$inferSelect
 export type Waiver = typeof waivers.$inferSelect

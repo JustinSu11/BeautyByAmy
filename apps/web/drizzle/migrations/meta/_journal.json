@@ -29,6 +29,13 @@
       "when": 1746569600000,
       "tag": "0003_waiver_sent_at_and_expiry",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1746570000000,
+      "tag": "0004_drop_otp_tokens",
+      "breakpoints": true
     }
   ]
 }
