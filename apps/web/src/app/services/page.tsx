@@ -6,6 +6,7 @@ import { SiteNav } from '@/components/site-nav'
 import { SiteFooter } from '@/components/site-footer'
 import { ServicesStickyNav } from '@/components/services/services-sticky-nav'
 import { cn } from '@/lib/utils'
+import { createServerClient } from '@/lib/supabase'
 
 export const metadata: Metadata = {
   title: 'Services | BeautyByAmy',
@@ -15,128 +16,36 @@ export const metadata: Metadata = {
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-const categories = [
-  {
-    id: 'lashes',
-    num: '01',
-    name: 'Lashes',
-    label: 'Lash Extensions',
-    description:
-      'Individually applied silk lashes — classic, hybrid, or full volume — for a seamless, customised look that enhances your natural eye shape.',
-    image: { src: '/images/gallery-1.jpg', alt: 'Classic eyelash extension close-up' },
-    groups: [
-      {
-        label: 'Classic',
-        services: [
-          { name: 'Classic Set',                          duration: '2 hrs 30 mins', price: '$185' },
-          { name: 'Classic Touch Up — 7 to 14 days',     duration: '45 mins',       price: '$60'  },
-          { name: 'Classic Touch Up — 15 to 21 days',    duration: '1 hr',          price: '$80'  },
-          { name: 'Classic Touch Up — 22 to 28 days',    duration: '1 hr 15 mins',  price: '$100' },
-        ],
-      },
-      {
-        label: 'Volume',
-        services: [
-          { name: 'Volume Set',                           duration: '2 hrs 30 mins', price: '$210' },
-          { name: 'Volume Touch Up — 7 to 14 days',      duration: '1 hr',          price: '$90'  },
-          { name: 'Volume Touch Up — 15 to 21 days',     duration: '1 hr 15 mins',  price: '$110' },
-          { name: 'Volume Touch Up — 22 to 28 days',     duration: '1 hr 30 mins',  price: '$130' },
-        ],
-      },
-      {
-        label: 'Hybrid',
-        services: [
-          { name: 'Hybrid Set',                           duration: '2 hrs 15 mins', price: '$195' },
-          { name: 'Hybrid Touch Up — 7 to 14 days',      duration: '50 mins',       price: '$75'  },
-          { name: 'Hybrid Touch Up — 15 to 21 days',     duration: '1 hr 5 mins',   price: '$95'  },
-          { name: 'Hybrid Touch Up — 22 to 28 days',     duration: '1 hr 20 mins',  price: '$115' },
-        ],
-      },
-      {
-        label: 'Other',
-        services: [
-          { name: 'Touch Up',    duration: '1 hr 30 mins', price: '$100' },
-          { name: 'Lash Removal', duration: '30 mins',     price: '$30'  },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'brows',
-    num: '02',
-    name: 'Brows',
-    label: 'Brow Services',
-    description:
-      'Shape, tint, and define. Quick, high-impact brow treatments to keep your arches perfectly groomed between appointments.',
-    image: { src: '/images/gallery-2.jpg', alt: 'Brow lamination before and after' },
-    groups: [
-      {
-        label: null,
-        services: [
-          { name: 'Brow Tint',         duration: '30 mins', price: '$35'          },
-          { name: 'Brow Wax',          duration: '15 mins', price: '$15'          },
-          { name: 'Color Splash-Ins',  duration: '30 mins', price: '$50'          },
-          { name: 'Chin Wax',          duration: '30 mins', price: 'Price varies' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'pmu',
-    num: '03',
-    name: 'Permanent\nMakeup',
-    label: 'Permanent Makeup',
-    description:
-      'Semi-permanent artistry for brows and lips — wake up every morning with effortless definition that lasts years, not hours.',
-    image: { src: '/images/gallery-5.jpg', alt: 'Microblading healed result' },
-    groups: [
-      {
-        label: 'Brows',
-        services: [
-          { name: 'Microblading',              duration: '2 hrs 45 mins', price: '$450' },
-          { name: 'Microshading',              duration: '3 hrs',         price: '$650' },
-          { name: 'Ombré Brows',              duration: '2 hrs 30 mins', price: '$500' },
-          { name: 'Ombré Cover-Up',           duration: '3 hrs',         price: '$650' },
-          { name: 'Microshading Cover-Up',     duration: '3 hrs 30 mins', price: '$750' },
-          { name: 'Cover-Up with Correction',  duration: '3 hrs 30 mins', price: '$800' },
-        ],
-      },
-      {
-        label: 'Lips',
-        services: [
-          { name: 'Lip Blush', duration: '3 hrs', price: '$600' },
-        ],
-      },
-      {
-        label: 'Color Refreshes',
-        services: [
-          { name: 'Brow Color Refresh — 8 weeks to 6 months',  duration: '2 hrs',         price: '$175' },
-          { name: 'Brow Color Refresh — 6 months to 1 year',   duration: '2 hrs 15 mins', price: '$250' },
-          { name: 'Brow Color Refresh — 12 to 20 months',      duration: '2 hrs 30 mins', price: '$375' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'addons',
-    num: '04',
-    name: 'Add-ons',
-    label: 'Consultations & Add-ons',
-    description:
-      "Not sure where to start? Book a consultation with Amy to discuss your goals, skin tone, and lifestyle before committing to a treatment.",
-    image: { src: '/images/gallery-6.jpg', alt: 'BeautyByAmy studio suite' },
-    groups: [
-      {
-        label: null,
-        services: [
-          { name: 'PMU Consultation',               duration: '30 mins', price: '$25'  },
-          { name: 'Patch Test',                     duration: '30 mins', price: '$25'  },
-          { name: 'Additional Correction / Touch Up', duration: '2 hrs', price: '$150' },
-        ],
-      },
-    ],
-  },
-]
+const categoryMeta: Record<string, { num: string; name: string; label: string; description: string; image: { src: string; alt: string } }> = {
+  lashes: { num: '01', name: 'Lashes',            label: 'Lash Extensions',         description: 'Individually applied silk lashes — classic, hybrid, or full volume — for a seamless, customised look that enhances your natural eye shape.', image: { src: '/images/gallery-1.jpg', alt: 'Classic eyelash extension close-up' } },
+  brows:  { num: '02', name: 'Brows',             label: 'Brow Services',           description: 'Shape, tint, and define. Quick, high-impact brow treatments to keep your arches perfectly groomed between appointments.',                     image: { src: '/images/gallery-2.jpg', alt: 'Brow lamination before and after'    } },
+  pmu:    { num: '03', name: 'Permanent\nMakeup', label: 'Permanent Makeup',        description: 'Semi-permanent artistry for brows and lips — wake up every morning with effortless definition that lasts years, not hours.',                  image: { src: '/images/gallery-5.jpg', alt: 'Microblading healed result'          } },
+  addons: { num: '04', name: 'Add-ons',           label: 'Consultations & Add-ons', description: "Not sure where to start? Book a consultation with Amy to discuss your goals, skin tone, and lifestyle before committing to a treatment.",    image: { src: '/images/gallery-6.jpg', alt: 'BeautyByAmy studio suite'           } },
+}
+
+async function getCategories() {
+  const supabase = createServerClient()
+  const { data, error } = await supabase
+    .from('services')
+    .select('*')
+    .eq('enabled', true)
+    .order('display_order')
+
+  if (error) throw new Error('Failed to load services')
+
+  const categoryOrder = ['lashes', 'brows', 'pmu', 'addons']
+  return categoryOrder.map((catId) => {
+    const rows = data.filter((r) => r.category === catId)
+    const groupLabels = [...new Set(rows.map((r) => r.group_label as string | null))]
+    const groups = groupLabels.map((label) => ({
+      label,
+      services: rows
+        .filter((r) => r.group_label === label)
+        .map((r) => ({ name: r.name, duration: r.duration, price: r.price })),
+    }))
+    return { id: catId, ...categoryMeta[catId], groups }
+  })
+}
 
 // ── Components ────────────────────────────────────────────────────────────────
 
@@ -189,7 +98,8 @@ function OrnamentDivider() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const categories = await getCategories()
   return (
     <div className="linen-bg grain-overlay min-h-screen">
       <SiteNav />
