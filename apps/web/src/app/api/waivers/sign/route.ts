@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/db'
 import { waivers, waiverTokens, bookings, customers } from '@/db/schema'
-import { CURRENT_WAIVER_VERSION } from '@/lib/auth'
+import { CURRENT_WAIVER_VERSION } from '@/lib/waiver-config'
 import { appendCustomerNote } from '@/lib/square'
 import { services } from '@/lib/services-data'
 import { eq, and } from 'drizzle-orm'

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/db'
 import { bookings, customers, waivers, waiverTokens } from '@/db/schema'
-import { CURRENT_WAIVER_VERSION } from '@/lib/auth'
+import { CURRENT_WAIVER_VERSION } from '@/lib/waiver-config'
 import { upsertSquareCustomer, saveCardOnFile, createSquareAppointment } from '@/lib/square'
 import { eq, and, gt } from 'drizzle-orm'
 import { z } from 'zod'
