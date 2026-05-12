@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { SiteNav } from '@/components/site-nav'
 import { SiteFooter } from '@/components/site-footer'
 import { cn } from '@/lib/utils'
+import { createServerClient } from '@/lib/supabase'
 
 export const metadata: Metadata = {
   title: 'Gallery | BeautyByAmy',
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 }
 
 type GalleryImage = {
+  id: string
   src: string
   alt: string
   category: string
@@ -18,55 +20,21 @@ type GalleryImage = {
   aspect?: string
 }
 
-// Single source of truth — both grids pull from here
-const images: GalleryImage[] = [
-  {
-    src:      '/images/gallery-1.jpg',
-    alt:      'Classic eyelash extension close-up',
-    category: 'Lash Extensions',
-    label:    'Classic Set',
-    aspect:   'aspect-[2/3]',
-  },
-  {
-    src:      '/images/gallery-2.jpg',
-    alt:      'Brow lamination before and after',
-    category: 'Brow Services',
-    label:    'Brow Lamination',
-    aspect:   'aspect-square',
-  },
-  {
-    src:      '/images/gallery-3.jpg',
-    alt:      'Volume lash set — full look',
-    category: 'Lash Extensions',
-    label:    'Volume Set',
-    aspect:   'aspect-[3/4]',
-  },
-  {
-    src:      '/images/gallery-4.jpg',
-    alt:      'Lip blush permanent makeup result',
-    category: 'Permanent Makeup',
-    label:    'Lip Blush',
-  },
-  {
-    src:      '/images/gallery-5.jpg',
-    alt:      'Microblading healed result',
-    category: 'Permanent Makeup',
-    label:    'Microblading',
-  },
-  {
-    src:      '/images/gallery-6.jpg',
-    alt:      'Studio suite detail',
-    category: 'Our Studio',
-    label:    'BeautyByAmy Studio',
-  },
-]
-
-// Masonry column assignment: [0,3] | [1,4] | [2,5]
-const columns = [
-  { top: images[0], bottom: images[3] },
-  { top: images[1], bottom: images[4] },
-  { top: images[2], bottom: images[5] },
-]
+async function getGalleryImages(): Promise<GalleryImage[]> {
+  const supabase = createServerClient()
+  const { data, error } = await supabase
+    .from('gallery_images')
+    .select('id, url, blur_data_url, category, label, display_order')
+    .order('display_order')
+  if (error) throw new Error('Failed to load gallery')
+  return data.map((row) => ({
+    id: row.id as string,
+    src: row.url as string,
+    alt: row.label as string,
+    category: row.category as string,
+    label: row.label as string,
+  }))
+}
 
 // Overlay that reveals on hover — gradient + category pill + service name
 function ImageOverlay({ category, label }: { category: string; label: string }) {
@@ -87,7 +55,16 @@ function ImageOverlay({ category, label }: { category: string; label: string }) 
   )
 }
 
-export default function GalleryPage() {
+export default async function GalleryPage() {
+  const images = await getGalleryImages()
+
+  // Masonry column assignment: [0,3] | [1,4] | [2,5]
+  const columns = [
+    { top: images[0], bottom: images[3] },
+    { top: images[1], bottom: images[4] },
+    { top: images[2], bottom: images[5] },
+  ]
+
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
