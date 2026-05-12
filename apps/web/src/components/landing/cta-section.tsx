@@ -15,7 +15,7 @@ export function CtaSection() {
   const { ref, isVisible } = useScrollAnimate()
 
   return (
-    <section id="contact" ref={ref} className="bg-background py-20 lg:py-28">
+    <section id="contact" ref={ref} className="bg-background py-20 lg:py-28 shadow-[inset_0_1px_0_rgba(0,0,0,0.06)]">
       <div
         className={cn(
           'mx-auto max-w-4xl px-4 text-center transition-all duration-700 lg:px-8',

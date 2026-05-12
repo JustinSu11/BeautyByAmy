@@ -4,8 +4,8 @@ import { Instagram, Facebook, Mail, MapPin, Phone } from 'lucide-react'
 const footerLinks = [
   { label: 'Home', href: '/' },
   { label: 'Book Appointment', href: '/booking' },
-  { label: 'Cancellation Policy', href: '/#contact' },
-  { label: 'Privacy Policy', href: '/#contact' },
+  { label: 'Cancellation Policy', href: '/contact' },
+  { label: 'Privacy Policy', href: '/contact' },
 ]
 
 const socialLinks = [

@@ -15,9 +15,9 @@ import {
 
 const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '/#services', label: 'Services' },
-  { href: '/#gallery', label: 'Gallery' },
-  { href: '/#contact', label: 'Contact' },
+  { href: '/services', label: 'Services' },
+  { href: '/gallery', label: 'Gallery' },
+  { href: '/contact', label: 'Contact' },
 ]
 
 export function SiteNav() {
@@ -41,7 +41,7 @@ export function SiteNav() {
       className={cn(
         'fixed inset-x-0 top-0 z-50 transition-all duration-300',
         scrolled || !isHome
-          ? 'border-b border-border bg-card/95 backdrop-blur-sm shadow-sm'
+          ? 'bg-card/95 backdrop-blur-sm shadow-sm'
           : 'bg-transparent'
       )}
     >
@@ -72,7 +72,7 @@ export function SiteNav() {
               scrolled || !isHome ? 'text-charcoal' : 'text-card'
             )}
           >
-            BeautyByAmy
+            iiBeautyByAmyii
           </span>
           <span
             className={cn(
@@ -82,7 +82,7 @@ export function SiteNav() {
                 : 'text-card/70'
             )}
           >
-            Luxury Beauty Studio
+            Beauty Studio
           </span>
         </Link>
 
@@ -135,7 +135,7 @@ export function SiteNav() {
             <SheetContent side="right" className="w-72 bg-card">
               <SheetHeader>
                 <SheetTitle className="font-serif text-xl text-charcoal">
-                  BeautyByAmy
+                  iiBeautyByAmyii
                 </SheetTitle>
               </SheetHeader>
               <nav className="mt-8 flex flex-col gap-1">

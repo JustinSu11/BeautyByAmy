@@ -6,6 +6,14 @@ import { upsertSquareCustomer, saveCardOnFile, createSquareAppointment } from '@
 import { eq, and, gt } from 'drizzle-orm'
 import { z } from 'zod'
 
+/** Normalize any US phone number to E.164 (+1XXXXXXXXXX) required by Square. */
+function toE164(raw: string): string {
+  const digits = raw.replace(/\D/g, '')
+  if (digits.length === 10) return `+1${digits}`
+  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`
+  return `+${digits}` // best-effort for already-international numbers
+}
+
 const Schema = z.object({
   sourceId: z.string(),
   name: z.string().min(2),
@@ -43,7 +51,7 @@ export async function POST(req: NextRequest) {
   let squareCustomerId: string
   let customerId: string
   try {
-    const result = await upsertSquareCustomer(phone, email, name)
+    const result = await upsertSquareCustomer(toE164(phone), email, name)
     squareCustomerId = result.squareCustomerId
 
     const [customer] = await db

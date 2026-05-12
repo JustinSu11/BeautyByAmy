@@ -75,10 +75,8 @@ export function TestimonialSection() {
     return () => clearInterval(timer)
   }, [next])
 
-  const t = testimonials[current]
-
   return (
-    <section ref={ref} className="bg-charcoal py-20 lg:py-28">
+    <section ref={ref} className="bg-charcoal py-20 lg:py-28 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
       <div
         className={cn(
           'mx-auto max-w-3xl px-4 text-center transition-all duration-700 lg:px-8',
@@ -96,28 +94,44 @@ export function TestimonialSection() {
           <span className="text-xs font-medium uppercase tracking-wider text-gold-light">Recommends Amy</span>
         </div>
 
-        {/* Quote area */}
-        <div className="relative min-h-[200px] sm:min-h-[180px]">
-          <blockquote
-            className={cn(
-              'font-serif text-xl leading-relaxed italic text-card/90 transition-all duration-300 sm:text-2xl lg:text-3xl text-balance',
-              isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
-            )}
-          >
-            {`"${t.quote}"`}
-          </blockquote>
+        {/* Quote area — CSS grid overlay: all slides share the same cell so the
+            container height is always set by the longest testimonial, never shifts */}
+        <div className="grid">
+          {testimonials.map((testimonial, i) => (
+            <blockquote
+              key={i}
+              aria-hidden={i !== current}
+              className={cn(
+                '[grid-area:1/1] font-serif text-xl leading-relaxed italic text-card/90 transition-all duration-300 sm:text-2xl lg:text-3xl text-balance',
+                i === current
+                  ? isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
+                  : 'opacity-0 pointer-events-none select-none'
+              )}
+            >
+              {`"${testimonial.quote}"`}
+            </blockquote>
+          ))}
         </div>
 
-        <div
-          className={cn(
-            'mt-8 flex flex-col items-center gap-1 transition-all duration-300',
-            isTransitioning ? 'opacity-0' : 'opacity-100'
-          )}
-        >
-          <cite className="text-sm font-semibold not-italic text-card/80">
-            {t.name}
-          </cite>
-          <span className="text-xs text-gold-light">{t.detail}</span>
+        {/* Author — grid overlay same pattern */}
+        <div className="mt-8 grid">
+          {testimonials.map((testimonial, i) => (
+            <div
+              key={i}
+              aria-hidden={i !== current}
+              className={cn(
+                '[grid-area:1/1] flex flex-col items-center gap-1 transition-all duration-300',
+                i === current
+                  ? isTransitioning ? 'opacity-0' : 'opacity-100'
+                  : 'opacity-0 pointer-events-none select-none'
+              )}
+            >
+              <cite className="text-sm font-semibold not-italic text-card/80">
+                {testimonial.name}
+              </cite>
+              <span className="text-xs text-gold-light">{testimonial.detail}</span>
+            </div>
+          ))}
         </div>
 
         {/* Navigation */}

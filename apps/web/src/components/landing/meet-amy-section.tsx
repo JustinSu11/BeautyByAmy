@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useEffect, useRef, useState } from 'react'
 import { useScrollAnimate } from '@/hooks/use-scroll-animate'
 import { cn } from '@/lib/utils'
 import { Award, Heart, Shield } from 'lucide-react'
@@ -14,8 +15,23 @@ const credentials = [
 export function MeetAmySection() {
   const { ref, isVisible } = useScrollAnimate()
 
+  // Bidirectional observer — rises + glows when in view, settles back when scrolled away
+  const photoRef = useRef<HTMLDivElement>(null)
+  const [isFocused, setIsFocused] = useState(false)
+
+  useEffect(() => {
+    const el = photoRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsFocused(entry.isIntersecting),
+      { threshold: 0.5 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <section ref={ref} className="bg-card py-20 lg:py-28">
+    <section ref={ref} className="linen-bg py-20 lg:py-28 shadow-[inset_0_1px_0_rgba(0,0,0,0.06)]">
       <div
         className={cn(
           'mx-auto max-w-6xl px-4 lg:px-8 transition-all duration-700',
@@ -24,8 +40,15 @@ export function MeetAmySection() {
       >
         <div className="flex flex-col items-center gap-12 lg:flex-row lg:gap-16">
           {/* Photo */}
-          <div className="relative w-full max-w-sm shrink-0 lg:w-2/5">
-            <div className="relative aspect-[3/4] overflow-hidden rounded-2xl">
+          <div ref={photoRef} className="relative w-full max-w-sm shrink-0 lg:w-2/5">
+            <div
+              className={cn(
+                'relative aspect-[3/4] overflow-hidden rounded-2xl transition-all duration-700 ease-out',
+                isFocused
+                  ? '-translate-y-3 shadow-[0_24px_64px_rgba(219,168,60,0.38),0_4px_16px_rgba(0,0,0,0.08)]'
+                  : 'translate-y-0 shadow-md'
+              )}
+            >
               <Image
                 src="/images/amy-portrait.jpg"
                 alt="Amy, certified beauty specialist and studio owner"
@@ -34,8 +57,6 @@ export function MeetAmySection() {
                 sizes="(max-width: 1024px) 100vw, 40vw"
               />
             </div>
-            {/* Gold accent frame */}
-            <div className="absolute -bottom-3 -right-3 -z-10 h-full w-full rounded-2xl border-2 border-gold/30" />
           </div>
 
           {/* Content */}

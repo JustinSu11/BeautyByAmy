@@ -2,7 +2,7 @@
   "name": "beauty-by-amy",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["mobile_flutter"],
+  "workspaces": ["apps/web", "mobile_flutter"],
   "scripts": {
     "dev:web": "next dev --turbopack",
     "dev:mobile": "npm run dev -w mobile_flutter",

@@ -10,6 +10,7 @@ declare global {
       payments: (appId: string, locationId: string) => Promise<{
         card: () => Promise<{
           attach: (selector: string) => Promise<void>
+          destroy: () => Promise<void>
           tokenize: () => Promise<{ status: 'OK' | 'Cancel' | 'Error' | 'Unknown'; token?: string; errors?: { message: string }[] }>
         }>
       }>
@@ -33,34 +34,64 @@ export function ConfirmModal({
   const { customerInfo, selectedService, selectedDate, selectedTime } = useBooking()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const cardRef = useRef<{ tokenize: () => Promise<{ status: 'OK' | 'Cancel' | 'Error' | 'Unknown'; token?: string; errors?: { message: string }[] }> } | null>(null)
+  const cardRef = useRef<{ tokenize: () => Promise<{ status: 'OK' | 'Cancel' | 'Error' | 'Unknown'; token?: string; errors?: { message: string }[] }>; destroy: () => Promise<void> } | null>(null)
 
   useEffect(() => {
-    const script = document.createElement('script')
-    script.src =
-      process.env.NODE_ENV === 'production'
-        ? 'https://web.squarecdn.com/v1/square.js'
-        : 'https://sandbox.web.squarecdn.com/v1/square.js'
-    script.onload = async () => {
+    // Guard against React StrictMode double-invoke: track whether this effect
+    // instance was cleaned up before async init finished.
+    let cancelled = false
+
+    async function initCard() {
       try {
         if (!window.Square) throw new Error('Square SDK not available')
+        // Bail if a card is already mounted (StrictMode re-run guard)
+        if (cardRef.current) return
+
         const payments = await window.Square.payments(
           process.env.NEXT_PUBLIC_SQUARE_APPLICATION_ID!,
           process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!
         )
         const card = await payments.card()
+
+        if (cancelled) {
+          await card.destroy()
+          return
+        }
+
         await card.attach('#square-card-container')
         cardRef.current = card
       } catch (err) {
-        console.error('[ConfirmModal] Square SDK init failed', err)
-        setError('Payment form failed to load. Please refresh and try again.')
+        if (!cancelled) {
+          console.error('[ConfirmModal] Square SDK init failed', err)
+          setError('Payment form failed to load. Please refresh and try again.')
+        }
       }
     }
-    script.onerror = () => {
-      setError('Payment form failed to load. Please refresh and try again.')
+
+    const squareSrc =
+      process.env.NODE_ENV === 'production'
+        ? 'https://web.squarecdn.com/v1/square.js'
+        : 'https://sandbox.web.squarecdn.com/v1/square.js'
+
+    if (window.Square) {
+      // Script already loaded (e.g. modal reopened) — init directly
+      initCard()
+    } else {
+      const script = document.createElement('script')
+      script.src = squareSrc
+      script.onload = initCard
+      script.onerror = () => {
+        if (!cancelled) setError('Payment form failed to load. Please refresh and try again.')
+      }
+      document.head.appendChild(script)
     }
-    document.head.appendChild(script)
-    return () => { document.head.removeChild(script) }
+
+    return () => {
+      cancelled = true
+      // Destroy the card element so the container is clean on remount
+      cardRef.current?.destroy().catch(() => {})
+      cardRef.current = null
+    }
   }, [])
 
   async function handleConfirm() {
