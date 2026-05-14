@@ -1,5 +1,8 @@
 import { auth } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { db } from '@/db'
+import { waivers, manualWaivers } from '@/db/schema'
+import { eq } from 'drizzle-orm'
+import { deleteFile } from '@/lib/cloudinary'
 import { NextResponse } from 'next/server'
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -7,27 +10,38 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const supabase = createServerClient()
 
-  // Fetch storage_path before deleting the row
-  const { data: waiver, error: fetchErr } = await supabase
-    .from('waivers')
-    .select('storage_path')
-    .eq('id', id)
-    .single()
+  // Try manual waivers first (they have Cloudinary files to clean up)
+  const [manual] = await db
+    .select({ cloudinary_id: manualWaivers.cloudinary_id })
+    .from(manualWaivers)
+    .where(eq(manualWaivers.id, id))
+    .limit(1)
 
-  if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 404 })
+  if (manual) {
+    if (manual.cloudinary_id) {
+      const { error: removeErr } = await deleteFile(manual.cloudinary_id)
+        .then(() => ({ error: null }))
+        .catch((e: Error) => ({ error: e.message }))
 
-  // Remove file from storage if it exists
-  if (waiver.storage_path) {
-    const { error: removeErr } = await supabase.storage.from('waivers').remove([waiver.storage_path])
-    if (removeErr) {
-      // Log orphaned file — DB row will still be deleted, but file needs manual cleanup in Supabase dashboard
-      console.error('Waiver storage removal failed:', waiver.storage_path, removeErr.message)
+      if (removeErr) {
+        // Log but continue — orphaned Cloudinary assets can be cleaned up manually
+        console.error('[waivers/delete] Cloudinary file removal failed:', manual.cloudinary_id, removeErr)
+      }
     }
+    await db.delete(manualWaivers).where(eq(manualWaivers.id, id))
+    return new NextResponse(null, { status: 204 })
   }
 
-  const { error } = await supabase.from('waivers').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  // Fall back to digital waivers (no file — just delete the DB row)
+  const [digital] = await db
+    .select({ id: waivers.id })
+    .from(waivers)
+    .where(eq(waivers.id, id))
+    .limit(1)
+
+  if (!digital) return NextResponse.json({ error: 'Waiver not found' }, { status: 404 })
+
+  await db.delete(waivers).where(eq(waivers.id, id))
   return new NextResponse(null, { status: 204 })
 }

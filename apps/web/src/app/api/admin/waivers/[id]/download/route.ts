@@ -1,5 +1,7 @@
 import { auth } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { db } from '@/db'
+import { manualWaivers } from '@/db/schema'
+import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -7,25 +9,21 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const supabase = createServerClient()
 
-  const { data: waiver, error: fetchErr } = await supabase
-    .from('waivers')
-    .select('storage_path, client_name')
-    .eq('id', id)
-    .single()
+  // Only manual waivers have attached files — digital waivers are pure DB records
+  const [waiver] = await db
+    .select({ cloudinary_url: manualWaivers.cloudinary_url, client_name: manualWaivers.client_name })
+    .from(manualWaivers)
+    .where(eq(manualWaivers.id, id))
+    .limit(1)
 
-  if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 404 })
-
-  if (!waiver.storage_path) {
+  if (!waiver) {
     return NextResponse.json({ error: 'No file attached to this waiver' }, { status: 404 })
   }
 
-  // Signed URL valid for 60 seconds — enough time to open the file, short enough to limit exposure
-  const { data, error } = await supabase.storage
-    .from('waivers')
-    .createSignedUrl(waiver.storage_path, 60)
+  if (!waiver.cloudinary_url) {
+    return NextResponse.json({ error: 'No file attached to this waiver' }, { status: 404 })
+  }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ url: data.signedUrl, client: waiver.client_name })
+  return NextResponse.json({ url: waiver.cloudinary_url, client: waiver.client_name })
 }

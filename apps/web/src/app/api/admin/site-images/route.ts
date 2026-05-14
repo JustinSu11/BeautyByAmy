@@ -1,14 +1,21 @@
 import { auth } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { db } from '@/db'
+import { siteImages } from '@/db/schema'
+import { eq } from 'drizzle-orm'
 import { uploadImage, deleteImage } from '@/lib/cloudinary'
 import { NextResponse } from 'next/server'
+
+const VALID_SLOTS = new Set([
+  'hero', 'meet-amy',
+  'gallery-1', 'gallery-2', 'gallery-3',
+  'gallery-4', 'gallery-5', 'gallery-6',
+])
 
 export async function GET() {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const supabase = createServerClient()
-  const { data, error } = await supabase.from('site_images').select('*').order('slot')
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  const data = await db.select().from(siteImages).orderBy(siteImages.slot)
   return NextResponse.json(data ?? [])
 }
 
@@ -21,40 +28,31 @@ export async function PATCH(req: Request) {
   const file = form.get('file') as File | null
   const alt  = form.get('alt') as string | null
 
-  const VALID_SLOTS = new Set([
-    'hero', 'meet-amy',
-    'gallery-1', 'gallery-2', 'gallery-3',
-    'gallery-4', 'gallery-5', 'gallery-6',
-  ])
-
   if (!slot || !VALID_SLOTS.has(slot) || !file) {
     return NextResponse.json({ error: 'slot must be a valid image slot, and file is required' }, { status: 400 })
   }
 
-  const supabase = createServerClient()
-
-  // Fetch current slot to clean up old Cloudinary asset (if not a seed placeholder)
-  const { data: existing } = await supabase
-    .from('site_images')
-    .select('cloudinary_id')
-    .eq('slot', slot)
-    .single()
+  // Fetch current slot to clean up old Cloudinary asset
+  const [existing] = await db
+    .select({ cloudinary_id: siteImages.cloudinary_id })
+    .from(siteImages)
+    .where(eq(siteImages.slot, slot))
+    .limit(1)
 
   const buffer = Buffer.from(await file.arrayBuffer())
   const { cloudinary_id, url, blur_data_url } = await uploadImage(buffer, `beautybyamy/site/${slot}`)
 
-  // Delete old Cloudinary asset if it was a real upload
+  // Delete old Cloudinary asset if it was a real upload (best-effort)
   if (existing?.cloudinary_id && !existing.cloudinary_id.startsWith('local-')) {
-    try { await deleteImage(existing.cloudinary_id) } catch { /* ignore — old asset cleanup is best-effort */ }
+    try { await deleteImage(existing.cloudinary_id) } catch { /* ignore */ }
   }
 
-  const { data, error } = await supabase
-    .from('site_images')
-    .update({ cloudinary_id, url, blur_data_url, alt: alt || slot })
-    .eq('slot', slot)
-    .select()
-    .single()
+  const [row] = await db
+    .update(siteImages)
+    .set({ cloudinary_id, url, blur_data_url, alt: alt || slot })
+    .where(eq(siteImages.slot, slot))
+    .returning()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+  if (!row) return NextResponse.json({ error: 'Slot not found' }, { status: 404 })
+  return NextResponse.json(row)
 }

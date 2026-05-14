@@ -41,3 +41,27 @@ export async function uploadImage(
 export async function deleteImage(cloudinaryId: string): Promise<void> {
   await cloudinary.uploader.destroy(cloudinaryId)
 }
+
+/** Upload a raw file (PDF, etc.) to Cloudinary and return its ID and URL. */
+export async function uploadFile(
+  buffer: Buffer,
+  folder: string,
+  filename: string,
+): Promise<{ cloudinary_id: string; url: string }> {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream(
+        { folder, resource_type: 'raw', public_id: filename },
+        (err, result) => {
+          if (err || !result) return reject(err)
+          resolve({ cloudinary_id: result.public_id, url: result.secure_url })
+        },
+      )
+      .end(buffer)
+  })
+}
+
+/** Delete a raw file (PDF, etc.) from Cloudinary. */
+export async function deleteFile(cloudinaryId: string): Promise<void> {
+  await cloudinary.uploader.destroy(cloudinaryId, { resource_type: 'raw' })
+}

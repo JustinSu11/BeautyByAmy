@@ -1,5 +1,7 @@
 import { auth } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { db } from '@/db'
+import { adminServices } from '@/db/schema'
+import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -16,14 +18,11 @@ export async function GET() {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const supabase = createServerClient()
-  const { data, error } = await supabase
-    .from('services')
-    .select('*')
-    .order('category')
-    .order('display_order')
+  const data = await db
+    .select()
+    .from(adminServices)
+    .orderBy(adminServices.category, adminServices.display_order)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
 }
 
@@ -35,13 +34,10 @@ export async function POST(req: Request) {
   const parsed = serviceSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
 
-  const supabase = createServerClient()
-  const { data, error } = await supabase
-    .from('services')
-    .insert({ ...parsed.data, enabled: true })
-    .select()
-    .single()
+  const [row] = await db
+    .insert(adminServices)
+    .values({ ...parsed.data, enabled: true })
+    .returning()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data, { status: 201 })
+  return NextResponse.json(row, { status: 201 })
 }

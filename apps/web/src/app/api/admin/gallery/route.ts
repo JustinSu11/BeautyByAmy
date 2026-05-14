@@ -1,5 +1,7 @@
 import { auth } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { db } from '@/db'
+import { galleryImages } from '@/db/schema'
+import { desc } from 'drizzle-orm'
 import { uploadImage, deleteImage } from '@/lib/cloudinary'
 import { NextResponse } from 'next/server'
 
@@ -7,13 +9,11 @@ export async function GET() {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const supabase = createServerClient()
-  const { data, error } = await supabase
-    .from('gallery_images')
-    .select('*')
-    .order('display_order')
+  const data = await db
+    .select()
+    .from(galleryImages)
+    .orderBy(galleryImages.display_order)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
 }
 
@@ -33,31 +33,23 @@ export async function POST(req: Request) {
   const buffer = Buffer.from(await file.arrayBuffer())
   const { cloudinary_id, url, blur_data_url } = await uploadImage(buffer, 'beautybyamy/gallery')
 
-  const supabase = createServerClient()
-  const { data: maxOrderRow } = await supabase
-    .from('gallery_images')
-    .select('display_order')
-    .order('display_order', { ascending: false })
+  // Determine next display_order (highest existing + 1)
+  const [topRow] = await db
+    .select({ display_order: galleryImages.display_order })
+    .from(galleryImages)
+    .orderBy(desc(galleryImages.display_order))
     .limit(1)
-    .maybeSingle()
+  const nextOrder = (topRow?.display_order ?? 0) + 1
 
-  const { data, error } = await supabase
-    .from('gallery_images')
-    .insert({
-      cloudinary_id,
-      url,
-      blur_data_url,
-      category,
-      label,
-      display_order: (maxOrderRow?.display_order ?? 0) + 1,
-    })
-    .select()
-    .single()
+  const [row] = await db
+    .insert(galleryImages)
+    .values({ cloudinary_id, url, blur_data_url, category, label, display_order: nextOrder })
+    .returning()
 
-  if (error) {
+  if (!row) {
     // Clean up the Cloudinary upload to avoid orphaned assets
     await deleteImage(cloudinary_id)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to save image record' }, { status: 500 })
   }
-  return NextResponse.json(data, { status: 201 })
+  return NextResponse.json(row, { status: 201 })
 }

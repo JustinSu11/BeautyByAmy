@@ -1,15 +1,20 @@
-import { createServerClient } from '@/lib/supabase'
+import { db } from '@/db'
+import { announcements } from '@/db/schema'
+import { and, eq, gt, isNull, or } from 'drizzle-orm'
 import { Megaphone } from 'lucide-react'
 
 export async function AnnouncementBanner() {
-  const supabase = createServerClient()
-  const { data } = await supabase
-    .from('announcements')
-    .select('message, expires_at')
-    .eq('active', true)
-    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+  const [data] = await db
+    .select({ message: announcements.message })
+    .from(announcements)
+    .where(
+      and(
+        eq(announcements.active, true),
+        // Show if expires_at is null (no expiry) or hasn't passed yet
+        or(isNull(announcements.expires_at), gt(announcements.expires_at, new Date())),
+      ),
+    )
     .limit(1)
-    .maybeSingle()
 
   if (!data) return null
 

@@ -1,5 +1,7 @@
 import { auth } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { db } from '@/db'
+import { adminServices } from '@/db/schema'
+import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -26,21 +28,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const parsed = patchSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
 
-  const supabase = createServerClient()
-  const { data, error } = await supabase
-    .from('services')
-    .update(parsed.data)
-    .eq('id', id)
-    .select()
-    .single()
+  const [row] = await db
+    .update(adminServices)
+    .set(parsed.data)
+    .where(eq(adminServices.id, id))
+    .returning()
 
-  if (error) {
-    if (error.code === 'PGRST116') {
-      return NextResponse.json({ error: 'Service not found' }, { status: 404 })
-    }
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-  return NextResponse.json(data)
+  if (!row) return NextResponse.json({ error: 'Service not found' }, { status: 404 })
+  return NextResponse.json(row)
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -48,9 +43,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const supabase = createServerClient()
-  const { error } = await supabase.from('services').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  // Idempotent: deleting a non-existent ID returns 204 (no content) — correct REST behaviour
+  await db.delete(adminServices).where(eq(adminServices.id, id))
+  // Idempotent: deleting a non-existent ID returns 204 — correct REST behaviour
   return new NextResponse(null, { status: 204 })
 }

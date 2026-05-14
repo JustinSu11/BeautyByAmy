@@ -1,5 +1,7 @@
 // apps/web/src/db/schema.ts
-import { pgTable, text, timestamp, boolean, uuid } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, boolean, uuid, integer } from 'drizzle-orm/pg-core'
+
+// ── Booking flow tables (existing) ───────────────────────────────────────────
 
 export const customers = pgTable('customers', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -32,6 +34,7 @@ export const waiverTokens = pgTable('waiver_tokens', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
+// Digital waivers signed through the booking flow
 export const waivers = pgTable('waivers', {
   id: uuid('id').primaryKey().defaultRandom(),
   customerId: uuid('customer_id').references(() => customers.id).notNull(),
@@ -41,7 +44,86 @@ export const waivers = pgTable('waivers', {
   ipAddress: text('ip_address'),
 })
 
+// ── Admin CMS tables ──────────────────────────────────────────────────────────
+// Note: property names use snake_case to match the DB column names directly,
+// so Drizzle query results match the JSON shape the frontend expects.
+
+// Admin-managed service menu for the public /services page
+export const adminServices = pgTable('admin_services', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  category: text('category').notNull(),        // 'lashes' | 'brows' | 'pmu' | 'addons'
+  /* eslint-disable @typescript-eslint/naming-convention */
+  group_label: text('group_label'),
+  name: text('name').notNull(),
+  duration: text('duration').notNull(),
+  price: text('price').notNull(),
+  enabled: boolean('enabled').default(true).notNull(),
+  display_order: integer('display_order').default(0).notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  /* eslint-enable @typescript-eslint/naming-convention */
+})
+
+// Gallery images managed through the admin panel
+export const galleryImages = pgTable('gallery_images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  /* eslint-disable @typescript-eslint/naming-convention */
+  cloudinary_id: text('cloudinary_id').notNull(),
+  url: text('url').notNull(),
+  blur_data_url: text('blur_data_url').notNull(),
+  category: text('category').notNull(),
+  label: text('label').notNull(),
+  display_order: integer('display_order').default(0).notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  /* eslint-enable @typescript-eslint/naming-convention */
+})
+
+// Site-wide announcement banner (only one active at a time)
+export const announcements = pgTable('announcements', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  message: text('message').notNull(),
+  active: boolean('active').default(false).notNull(),
+  /* eslint-disable @typescript-eslint/naming-convention */
+  expires_at: timestamp('expires_at'),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  /* eslint-enable @typescript-eslint/naming-convention */
+})
+
+// Named image slots on the public site (hero, meet-amy, gallery-1…6)
+export const siteImages = pgTable('site_images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slot: text('slot').unique().notNull(),
+  /* eslint-disable @typescript-eslint/naming-convention */
+  cloudinary_id: text('cloudinary_id').notNull(),
+  url: text('url').notNull(),
+  blur_data_url: text('blur_data_url').notNull(),
+  alt: text('alt').notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  /* eslint-enable @typescript-eslint/naming-convention */
+})
+
+// Waivers manually uploaded by admin (paper scans, external PDFs, etc.)
+export const manualWaivers = pgTable('manual_waivers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  /* eslint-disable @typescript-eslint/naming-convention */
+  client_name: text('client_name').notNull(),
+  service: text('service').notNull(),
+  appointment_date: timestamp('appointment_date'),
+  signed_at: timestamp('signed_at').defaultNow().notNull(),
+  cloudinary_id: text('cloudinary_id'),   // null when no file is attached
+  cloudinary_url: text('cloudinary_url'), // direct Cloudinary URL for download
+  notes: text('notes'),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  /* eslint-enable @typescript-eslint/naming-convention */
+})
+
+// ── Inferred types ────────────────────────────────────────────────────────────
+
 export type Customer = typeof customers.$inferSelect
 export type Booking = typeof bookings.$inferSelect
 export type WaiverToken = typeof waiverTokens.$inferSelect
 export type Waiver = typeof waivers.$inferSelect
+export type AdminService = typeof adminServices.$inferSelect
+export type GalleryImage = typeof galleryImages.$inferSelect
+export type Announcement = typeof announcements.$inferSelect
+export type SiteImage = typeof siteImages.$inferSelect
+export type ManualWaiver = typeof manualWaivers.$inferSelect

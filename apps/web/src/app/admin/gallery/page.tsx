@@ -1,14 +1,12 @@
-import { createServerClient } from '@/lib/supabase'
+import { db } from '@/db'
+import { galleryImages } from '@/db/schema'
 import { GalleryGrid } from '@/components/admin/gallery-grid'
 
 export default async function GalleryAdminPage() {
-  const supabase = createServerClient()
-  const { data, error } = await supabase
-    .from('gallery_images')
-    .select('id, url, category, label')
-    .order('display_order')
-
-  if (error) throw new Error(`Failed to load gallery: ${error.message}`)
+  const data = await db
+    .select({ id: galleryImages.id, url: galleryImages.url, category: galleryImages.category, label: galleryImages.label })
+    .from(galleryImages)
+    .orderBy(galleryImages.display_order)
 
   return (
     <div className="p-8">

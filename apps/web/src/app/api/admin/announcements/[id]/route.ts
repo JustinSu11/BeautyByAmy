@@ -1,5 +1,7 @@
 import { auth } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { db } from '@/db'
+import { announcements } from '@/db/schema'
+import { eq, ne } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -12,30 +14,38 @@ const patchSchema = z.object({
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const { id } = await params
-  const raw = await req.json()
-  const parsed = patchSchema.safeParse(raw)
+  const parsed = patchSchema.safeParse(await req.json())
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
-  const supabase = createServerClient()
+
   // Only one announcement active at a time
   if (parsed.data.active) {
-    await supabase.from('announcements').update({ active: false }).neq('id', id)
+    await db.update(announcements).set({ active: false }).where(ne(announcements.id, id))
   }
-  const { data, error } = await supabase
-    .from('announcements')
-    .update(parsed.data)
-    .eq('id', id)
-    .select()
-    .single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+
+  const updateValues: Record<string, unknown> = {}
+  if (parsed.data.message   !== undefined) updateValues.message   = parsed.data.message
+  if (parsed.data.active    !== undefined) updateValues.active    = parsed.data.active
+  if ('expires_at' in parsed.data) {
+    updateValues.expires_at = parsed.data.expires_at ? new Date(parsed.data.expires_at) : null
+  }
+
+  const [row] = await db
+    .update(announcements)
+    .set(updateValues)
+    .where(eq(announcements.id, id))
+    .returning()
+
+  if (!row) return NextResponse.json({ error: 'Announcement not found' }, { status: 404 })
+  return NextResponse.json(row)
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const { id } = await params
-  const supabase = createServerClient()
-  await supabase.from('announcements').delete().eq('id', id)
+  await db.delete(announcements).where(eq(announcements.id, id))
   return new NextResponse(null, { status: 204 })
 }

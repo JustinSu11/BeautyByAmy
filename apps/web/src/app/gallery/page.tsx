@@ -3,7 +3,8 @@ import Image from 'next/image'
 import { SiteNav } from '@/components/site-nav'
 import { SiteFooter } from '@/components/site-footer'
 import { cn } from '@/lib/utils'
-import { createServerClient } from '@/lib/supabase'
+import { db } from '@/db'
+import { galleryImages } from '@/db/schema'
 
 export const metadata: Metadata = {
   title: 'Gallery | BeautyByAmy',
@@ -21,18 +22,17 @@ type GalleryImage = {
 }
 
 async function getGalleryImages(): Promise<GalleryImage[]> {
-  const supabase = createServerClient()
-  const { data, error } = await supabase
-    .from('gallery_images')
-    .select('id, url, blur_data_url, category, label, display_order')
-    .order('display_order')
-  if (error) throw new Error('Failed to load gallery')
+  const data = await db
+    .select({ id: galleryImages.id, url: galleryImages.url, blur_data_url: galleryImages.blur_data_url, category: galleryImages.category, label: galleryImages.label })
+    .from(galleryImages)
+    .orderBy(galleryImages.display_order)
+
   return data.map((row) => ({
-    id: row.id as string,
-    src: row.url as string,
-    alt: row.label as string,
-    category: row.category as string,
-    label: row.label as string,
+    id:       row.id,
+    src:      row.url,
+    alt:      row.label,
+    category: row.category,
+    label:    row.label,
   }))
 }
 

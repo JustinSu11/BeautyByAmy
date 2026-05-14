@@ -6,7 +6,9 @@ import { SiteNav } from '@/components/site-nav'
 import { SiteFooter } from '@/components/site-footer'
 import { ServicesStickyNav } from '@/components/services/services-sticky-nav'
 import { cn } from '@/lib/utils'
-import { createServerClient } from '@/lib/supabase'
+import { db } from '@/db'
+import { adminServices } from '@/db/schema'
+import { eq } from 'drizzle-orm'
 
 export const metadata: Metadata = {
   title: 'Services | BeautyByAmy',
@@ -24,23 +26,20 @@ const categoryMeta: Record<string, { num: string; name: string; label: string; d
 }
 
 async function getCategories() {
-  const supabase = createServerClient()
-  const { data, error } = await supabase
-    .from('services')
-    .select('*')
-    .eq('enabled', true)
-    .order('display_order')
-
-  if (error) throw new Error('Failed to load services')
+  const data = await db
+    .select()
+    .from(adminServices)
+    .where(eq(adminServices.enabled, true))
+    .orderBy(adminServices.display_order)
 
   const categoryOrder = ['lashes', 'brows', 'pmu', 'addons']
   return categoryOrder.map((catId) => {
     const rows = data.filter((r) => r.category === catId)
-    const groupLabels = [...new Set(rows.map((r) => r.group_label as string | null))]
+    const groupLabels = [...new Set(rows.map((r) => r.group_label ?? null))]
     const groups = groupLabels.map((label) => ({
       label,
       services: rows
-        .filter((r) => r.group_label === label)
+        .filter((r) => (r.group_label ?? null) === label)
         .map((r) => ({ name: r.name, duration: r.duration, price: r.price })),
     }))
     return { id: catId, ...categoryMeta[catId], groups }

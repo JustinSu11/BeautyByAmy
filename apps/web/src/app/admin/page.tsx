@@ -1,23 +1,20 @@
 import Link from 'next/link'
-import { createServerClient } from '@/lib/supabase'
+import { db } from '@/db'
+import { adminServices, galleryImages, announcements } from '@/db/schema'
 import { Scissors, ImageIcon, Megaphone, ToggleRight } from 'lucide-react'
 
 async function getStats() {
-  const supabase = createServerClient()
-  const [services, gallery, announcements] = await Promise.all([
-    supabase.from('services').select('id, enabled'),
-    supabase.from('gallery_images').select('id'),
-    supabase.from('announcements').select('id, active'),
+  const [services, gallery, announcementRows] = await Promise.all([
+    db.select({ id: adminServices.id, enabled: adminServices.enabled }).from(adminServices),
+    db.select({ id: galleryImages.id }).from(galleryImages),
+    db.select({ id: announcements.id, active: announcements.active }).from(announcements),
   ])
-  if (services.error) throw new Error(`services query failed: ${services.error.message}`)
-  if (gallery.error)  throw new Error(`gallery query failed: ${gallery.error.message}`)
-  if (announcements.error) throw new Error(`announcements query failed: ${announcements.error.message}`)
 
   return {
-    totalServices:      services.data.length,
-    activeServices:     services.data.filter((s: { enabled: boolean }) => s.enabled).length,
-    galleryImages:      gallery.data.length,
-    activeAnnouncement: announcements.data.some((a: { active: boolean }) => a.active),
+    totalServices:      services.length,
+    activeServices:     services.filter((s) => s.enabled).length,
+    galleryImages:      gallery.length,
+    activeAnnouncement: announcementRows.some((a) => a.active),
   }
 }
 
@@ -25,10 +22,10 @@ export default async function AdminDashboard() {
   const stats = await getStats()
 
   const cards = [
-    { label: 'Total Services',    value: stats.totalServices,                    icon: Scissors,    href: '/admin/services'       },
-    { label: 'Active Services',   value: stats.activeServices,                   icon: ToggleRight, href: '/admin/services'       },
-    { label: 'Gallery Images',    value: stats.galleryImages,                    icon: ImageIcon,   href: '/admin/gallery'        },
-    { label: 'Announcement Live', value: stats.activeAnnouncement ? 'Yes' : 'No', icon: Megaphone,  href: '/admin/announcements'  },
+    { label: 'Total Services',    value: stats.totalServices,                     icon: Scissors,    href: '/admin/services'      },
+    { label: 'Active Services',   value: stats.activeServices,                    icon: ToggleRight, href: '/admin/services'      },
+    { label: 'Gallery Images',    value: stats.galleryImages,                     icon: ImageIcon,   href: '/admin/gallery'       },
+    { label: 'Announcement Live', value: stats.activeAnnouncement ? 'Yes' : 'No', icon: Megaphone,  href: '/admin/announcements' },
   ]
 
   return (

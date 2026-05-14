@@ -87,7 +87,7 @@ export default function SiteImagesPage() {
       </div>
 
       {images.length === 0 && (
-        <p className="py-12 text-center text-sm text-white/30">No image slots seeded yet. Run the seed SQL in Supabase dashboard first.</p>
+        <p className="py-12 text-center text-sm text-white/30">No image slots seeded yet. Run the seed SQL against your Neon database first.</p>
       )}
     </div>
   )
