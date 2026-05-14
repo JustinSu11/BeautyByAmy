@@ -21,7 +21,15 @@ export async function PATCH(req: Request) {
   const file = form.get('file') as File | null
   const alt  = form.get('alt') as string | null
 
-  if (!slot || !file) return NextResponse.json({ error: 'slot and file required' }, { status: 400 })
+  const VALID_SLOTS = new Set([
+    'hero', 'meet-amy',
+    'gallery-1', 'gallery-2', 'gallery-3',
+    'gallery-4', 'gallery-5', 'gallery-6',
+  ])
+
+  if (!slot || !VALID_SLOTS.has(slot) || !file) {
+    return NextResponse.json({ error: 'slot must be a valid image slot, and file is required' }, { status: 400 })
+  }
 
   const supabase = createServerClient()
 

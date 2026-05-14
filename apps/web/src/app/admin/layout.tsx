@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
+import { Toaster } from '@/components/ui/sonner'
 
 export default async function AdminLayout({
   children,
@@ -15,6 +16,7 @@ export default async function AdminLayout({
       <AdminSidebar />
       <main className="flex-1 overflow-auto">
         {children}
+        <Toaster />
       </main>
     </div>
   )
