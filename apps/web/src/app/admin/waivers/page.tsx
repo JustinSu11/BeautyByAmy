@@ -35,8 +35,12 @@ export default function WaiversPage() {
     if (search) params.set('search', search)
     if (filter !== 'all') params.set('method', filter)
     fetch(`/api/admin/waivers?${params}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`${r.status}`)
+        return r.json()
+      })
       .then((d) => setWaivers(Array.isArray(d) ? d : []))
+      .catch(() => toast.error('Failed to load waivers'))
   }, [search, filter])
 
   useEffect(() => { load() }, [load])

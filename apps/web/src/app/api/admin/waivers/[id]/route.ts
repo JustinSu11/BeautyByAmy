@@ -20,7 +20,11 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
   // Remove file from storage if it exists
   if (waiver.storage_path) {
-    await supabase.storage.from('waivers').remove([waiver.storage_path])
+    const { error: removeErr } = await supabase.storage.from('waivers').remove([waiver.storage_path])
+    if (removeErr) {
+      // Log orphaned file — DB row will still be deleted, but file needs manual cleanup in Supabase dashboard
+      console.error('Waiver storage removal failed:', waiver.storage_path, removeErr.message)
+    }
   }
 
   const { error } = await supabase.from('waivers').delete().eq('id', id)
