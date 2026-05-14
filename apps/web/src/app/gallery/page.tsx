@@ -58,12 +58,15 @@ function ImageOverlay({ category, label }: { category: string; label: string }) 
 export default async function GalleryPage() {
   const images = await getGalleryImages()
 
-  // Masonry column assignment: [0,3] | [1,4] | [2,5]
-  const columns = [
-    { top: images[0], bottom: images[3] },
-    { top: images[1], bottom: images[4] },
-    { top: images[2], bottom: images[5] },
-  ]
+  // Masonry column assignment — guard against fewer than 6 images
+  const safeImages = images.slice(0, 6)
+  const columns = safeImages.length >= 6
+    ? [
+        { top: safeImages[0], bottom: safeImages[3] },
+        { top: safeImages[1], bottom: safeImages[4] },
+        { top: safeImages[2], bottom: safeImages[5] },
+      ]
+    : []
 
   return (
     <div className="min-h-screen bg-background">
@@ -102,38 +105,40 @@ export default async function GalleryPage() {
             ))}
           </div>
 
-          {/* sm+: 3-column masonry — top image sets column height; bottom fills the rest */}
-          <div className="hidden sm:flex sm:items-stretch sm:gap-4">
-            {columns.map((col) => (
-              <div key={col.top.src} className="flex flex-1 min-w-0 flex-col gap-4">
+          {/* sm+: 3-column masonry — only renders when 6+ images are loaded */}
+          {columns.length > 0 && (
+            <div className="hidden sm:flex sm:items-stretch sm:gap-4">
+              {columns.map((col) => (
+                <div key={col.top.src} className="flex flex-1 min-w-0 flex-col gap-4">
 
-                {/* Top image — fixed aspect ratio drives column height variation */}
-                <div className={cn('group relative overflow-hidden rounded-2xl', col.top.aspect)}>
-                  <Image
-                    src={col.top.src}
-                    alt={col.top.alt}
-                    fill
-                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                    sizes="33vw"
-                  />
-                  <ImageOverlay category={col.top.category} label={col.top.label} />
+                  {/* Top image — fixed aspect ratio drives column height variation */}
+                  <div className={cn('group relative overflow-hidden rounded-2xl', col.top.aspect)}>
+                    <Image
+                      src={col.top.src}
+                      alt={col.top.alt}
+                      fill
+                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                      sizes="33vw"
+                    />
+                    <ImageOverlay category={col.top.category} label={col.top.label} />
+                  </div>
+
+                  {/* Bottom image — stretches to fill remaining height */}
+                  <div className="group relative flex-1 overflow-hidden rounded-2xl min-h-[180px]">
+                    <Image
+                      src={col.bottom.src}
+                      alt={col.bottom.alt}
+                      fill
+                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                      sizes="33vw"
+                    />
+                    <ImageOverlay category={col.bottom.category} label={col.bottom.label} />
+                  </div>
+
                 </div>
-
-                {/* Bottom image — stretches to fill remaining height */}
-                <div className="group relative flex-1 overflow-hidden rounded-2xl min-h-[180px]">
-                  <Image
-                    src={col.bottom.src}
-                    alt={col.bottom.alt}
-                    fill
-                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                    sizes="33vw"
-                  />
-                  <ImageOverlay category={col.bottom.category} label={col.bottom.label} />
-                </div>
-
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
         </div>
       </main>
