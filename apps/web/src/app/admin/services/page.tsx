@@ -1,12 +1,6 @@
 import { createServerClient } from '@/lib/supabase'
 import { ServiceTable } from '@/components/admin/service-table'
-
-type ServiceCategory = 'lashes' | 'brows' | 'pmu' | 'addons'
-
-type Service = {
-  id: string; category: ServiceCategory; group_label: string | null
-  name: string; duration: string; price: string; enabled: boolean
-}
+import type { Service, ServiceCategory } from '@/types/service'
 
 const VALID_CATEGORIES: ServiceCategory[] = ['lashes', 'brows', 'pmu', 'addons']
 

@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { X } from 'lucide-react'
+import { toast } from 'sonner'
 
 const schema = z.object({
   category:    z.enum(['lashes', 'brows', 'pmu', 'addons']),
@@ -38,7 +39,7 @@ export function ServiceForm({ initial, onClose, onSaved }: Props) {
     const url    = isEdit ? `/api/admin/services/${initial!.id}` : '/api/admin/services'
     const method = isEdit ? 'PATCH' : 'POST'
     const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(values) })
-    if (!res.ok) return alert('Save failed')
+    if (!res.ok) { toast.error('Save failed — please try again'); return }
     onSaved()
     onClose()
   }

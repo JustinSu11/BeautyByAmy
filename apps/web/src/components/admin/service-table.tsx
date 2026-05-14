@@ -3,15 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pencil, Trash2, ToggleLeft, ToggleRight, Plus } from 'lucide-react'
+import { toast } from 'sonner'
 import { ServiceForm } from './service-form'
 import { cn } from '@/lib/utils'
-
-type ServiceCategory = 'lashes' | 'brows' | 'pmu' | 'addons'
-
-type Service = {
-  id: string; category: ServiceCategory; group_label: string | null
-  name: string; duration: string; price: string; enabled: boolean
-}
+import type { Service } from '@/types/service'
 
 const CATEGORY_LABELS: Record<string, string> = {
   lashes: 'Lash Extensions', brows: 'Brow Services',
@@ -25,17 +20,25 @@ export function ServiceTable({ services: initial }: { services: Service[] }) {
   const [adding, setAdding]     = useState(false)
 
   async function toggle(svc: Service) {
-    await fetch(`/api/admin/services/${svc.id}`, {
+    const res = await fetch(`/api/admin/services/${svc.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ enabled: !svc.enabled }),
     })
+    if (!res.ok) {
+      toast.error('Failed to update service status')
+      return
+    }
     setServices((prev) => prev.map((s) => s.id === svc.id ? { ...s, enabled: !s.enabled } : s))
   }
 
   async function destroy(id: string) {
     if (!confirm('Delete this service? This cannot be undone.')) return
-    await fetch(`/api/admin/services/${id}`, { method: 'DELETE' })
+    const res = await fetch(`/api/admin/services/${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      toast.error('Failed to delete service')
+      return
+    }
     setServices((prev) => prev.filter((s) => s.id !== id))
   }
 
