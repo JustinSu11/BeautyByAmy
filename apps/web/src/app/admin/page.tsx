@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createServerClient } from '@/lib/supabase'
 import { Scissors, ImageIcon, Megaphone, ToggleRight } from 'lucide-react'
 
@@ -8,11 +9,15 @@ async function getStats() {
     supabase.from('gallery_images').select('id'),
     supabase.from('announcements').select('id, active'),
   ])
+  if (services.error) throw new Error(`services query failed: ${services.error.message}`)
+  if (gallery.error)  throw new Error(`gallery query failed: ${gallery.error.message}`)
+  if (announcements.error) throw new Error(`announcements query failed: ${announcements.error.message}`)
+
   return {
-    totalServices:      services.data?.length ?? 0,
-    activeServices:     services.data?.filter((s) => s.enabled).length ?? 0,
-    galleryImages:      gallery.data?.length ?? 0,
-    activeAnnouncement: announcements.data?.some((a) => a.active) ?? false,
+    totalServices:      services.data.length,
+    activeServices:     services.data.filter((s: { enabled: boolean }) => s.enabled).length,
+    galleryImages:      gallery.data.length,
+    activeAnnouncement: announcements.data.some((a: { active: boolean }) => a.active),
   }
 }
 
@@ -33,7 +38,7 @@ export default async function AdminDashboard() {
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map((card) => (
-          <a
+          <Link
             key={card.label}
             href={card.href}
             className="rounded-xl border border-white/10 bg-white/5 p-5 transition hover:border-[#C9A96E]/40 cursor-pointer"
@@ -41,7 +46,7 @@ export default async function AdminDashboard() {
             <card.icon className="mb-3 h-5 w-5 text-[#C9A96E]" />
             <p className="text-2xl font-semibold text-white">{card.value}</p>
             <p className="mt-1 text-xs text-white/40">{card.label}</p>
-          </a>
+          </Link>
         ))}
       </div>
     </div>
