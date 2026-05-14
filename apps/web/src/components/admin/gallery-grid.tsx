@@ -49,6 +49,7 @@ export function GalleryGrid({ images: initial }: { images: GalleryImage[] }) {
               <p className="text-sm text-white">{img.label}</p>
             </div>
             <button
+              aria-label={`Remove ${img.label} from gallery`}
               onClick={() => destroy(img.id)}
               className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white/60 opacity-0 transition hover:bg-red-500 hover:text-white group-hover:opacity-100 cursor-pointer"
             >

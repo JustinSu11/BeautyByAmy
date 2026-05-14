@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth'
 import { createServerClient } from '@/lib/supabase'
-import { uploadImage } from '@/lib/cloudinary'
+import { uploadImage, deleteImage } from '@/lib/cloudinary'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -54,6 +54,10 @@ export async function POST(req: Request) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    // Clean up the Cloudinary upload to avoid orphaned assets
+    await deleteImage(cloudinary_id)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
   return NextResponse.json(data, { status: 201 })
 }

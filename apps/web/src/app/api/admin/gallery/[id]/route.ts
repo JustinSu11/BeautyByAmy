@@ -19,7 +19,11 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
   // Only delete from Cloudinary if it's a real upload (not a local seed placeholder)
   if (!image.cloudinary_id.startsWith('local-')) {
-    await deleteImage(image.cloudinary_id)
+    try {
+      await deleteImage(image.cloudinary_id)
+    } catch {
+      return NextResponse.json({ error: 'Cloudinary delete failed' }, { status: 500 })
+    }
   }
 
   const { error } = await supabase.from('gallery_images').delete().eq('id', id)

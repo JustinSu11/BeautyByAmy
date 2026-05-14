@@ -60,6 +60,8 @@ export function ImageUploader({ onUploaded }: Props) {
           className={`${inputCls} flex-1 min-w-[180px]`}
         />
         <label
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click() }}
           className={`flex cursor-pointer items-center gap-2 rounded-lg bg-[#C9A96E] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#A68B4E] ${loading ? 'opacity-50 pointer-events-none' : ''}`}
         >
           <Upload className="h-4 w-4" />
