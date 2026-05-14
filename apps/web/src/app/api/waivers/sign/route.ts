@@ -10,7 +10,8 @@ import { z } from 'zod'
 
 const Schema = z.object({
   token: z.string().uuid(),
-  agreed: z.literal(true),
+  waiverType: z.enum(['lash', 'pmu', 'reconsent']),
+  formData: z.record(z.string(), z.unknown()),
 })
 
 export async function POST(req: NextRequest) {
@@ -48,6 +49,8 @@ export async function POST(req: NextRequest) {
     await db.insert(waivers).values({
       customerId: tokenRow.customerId,
       waiverVersion: CURRENT_WAIVER_VERSION,
+      waiverType: parsed.data.waiverType,
+      formData: parsed.data.formData,
       expiresAt: waiverExpiresAt,
       ipAddress: ip,
     })
@@ -60,7 +63,6 @@ export async function POST(req: NextRequest) {
       year: 'numeric', month: 'long', day: 'numeric',
     })
 
-    // Get customer's Square ID to update their profile note
     const [customerRow] = await db
       .select({ squareCustomerId: customers.squareCustomerId })
       .from(customers)
@@ -70,7 +72,7 @@ export async function POST(req: NextRequest) {
     if (customerRow) {
       await appendCustomerNote(
         customerRow.squareCustomerId,
-        `Waiver signed (v${CURRENT_WAIVER_VERSION}) on ${signedAt}`
+        `Waiver signed (v${CURRENT_WAIVER_VERSION}, type: ${parsed.data.waiverType}) on ${signedAt}`
       )
     } else {
       console.error('[waivers/sign] No customer row found', { customerId: tokenRow.customerId })

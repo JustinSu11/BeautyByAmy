@@ -1,5 +1,5 @@
 // apps/web/src/db/schema.ts
-import { pgTable, text, timestamp, boolean, uuid, integer } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, boolean, uuid, integer, jsonb } from 'drizzle-orm/pg-core'
 
 // ── Booking flow tables (existing) ───────────────────────────────────────────
 
@@ -39,9 +39,11 @@ export const waivers = pgTable('waivers', {
   id: uuid('id').primaryKey().defaultRandom(),
   customerId: uuid('customer_id').references(() => customers.id).notNull(),
   waiverVersion: text('waiver_version').notNull(),
+  waiverType: text('waiver_type'),      // 'lash' | 'pmu' | 'reconsent' — null for legacy rows
   signedAt: timestamp('signed_at').defaultNow().notNull(),
   expiresAt: timestamp('expires_at').notNull(),
   ipAddress: text('ip_address'),
+  formData: jsonb('form_data'),         // structured form answers (null for legacy rows)
 })
 
 // ── Admin CMS tables ──────────────────────────────────────────────────────────
