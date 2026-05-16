@@ -41,11 +41,11 @@ export function ImageUploader({ onUploaded }: Props) {
     onUploaded()
   }
 
-  const inputCls = 'rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#C9A96E]'
+  const inputCls = 'rounded-lg border border-[#D9D1C7] bg-white px-3 py-2.5 text-sm text-[#2D2D2D] placeholder:text-[#6B6B6B]/50 outline-none focus:border-[#C9A96E]'
 
   return (
-    <div className="rounded-xl border border-dashed border-white/20 bg-white/5 p-6">
-      <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-[#C9A96E]">Upload Image</p>
+    <div className="rounded-lg border-2 border-dashed border-[#D9D1C7] bg-white p-6 hover:border-[#C9A96E] hover:bg-[#C9A96E]/5 transition-colors">
+      <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.14em] text-[#C9A96E]">Upload Image</p>
       <div className="flex flex-wrap gap-3">
         <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls}>
           <option>Lash Extensions</option>

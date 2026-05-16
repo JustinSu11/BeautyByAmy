@@ -12,7 +12,7 @@ export default async function AdminLayout({
   if (!session) redirect('/login')
 
   return (
-    <div className="flex min-h-screen bg-[#0F0F0F] text-white">
+    <div className="linen-bg flex min-h-screen text-[#2D2D2D]">
       <AdminSidebar />
       <main className="flex-1 overflow-auto">
         {children}

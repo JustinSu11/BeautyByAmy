@@ -51,12 +51,12 @@ export default function AnnouncementsPage() {
     toast.success('Deleted')
   }
 
-  const inputCls = 'flex-1 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#C9A96E]'
+  const inputCls = 'flex-1 rounded-lg border border-[#D9D1C7] bg-white px-4 py-2.5 text-sm text-[#2D2D2D] placeholder:text-[#6B6B6B]/50 outline-none focus:border-[#C9A96E]'
 
   return (
-    <div className="p-8">
-      <h1 className="mb-1 font-serif text-2xl text-white">Announcements</h1>
-      <p className="mb-6 text-sm text-white/40">Only one announcement can be active at a time. It appears as a gold banner at the top of every page.</p>
+    <div className="p-7">
+      <h1 className="mb-1 font-serif text-xl font-semibold text-[#2D2D2D]">Announcements</h1>
+      <p className="mb-6 text-sm text-[#6B6B6B]">Only one announcement can be active at a time. It appears as a gold banner at the top of every page.</p>
 
       <div className="mb-6 flex gap-3">
         <input
@@ -75,31 +75,35 @@ export default function AnnouncementsPage() {
         </button>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-0">
         {items.map((item) => (
-          <div key={item.id} className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-            <button onClick={() => toggle(item)} className="cursor-pointer shrink-0" aria-label={item.active ? 'Deactivate announcement' : 'Activate announcement'}>
+          <div key={item.id} className="flex items-center gap-4 rounded-lg border border-[#E8E2DA] bg-white px-4 py-3 mb-3.5 shadow-sm">
+            <button
+              onClick={() => toggle(item)}
+              className="cursor-pointer shrink-0"
+              aria-label={item.active ? 'Deactivate announcement' : 'Activate announcement'}
+            >
               {item.active
                 ? <ToggleRight className="h-5 w-5 text-[#C9A96E]" />
-                : <ToggleLeft  className="h-5 w-5 text-white/30"   />}
+                : <ToggleLeft  className="h-5 w-5 text-[#6B6B6B]/40"   />}
             </button>
-            <p className="flex-1 text-sm text-white">{item.message}</p>
+            <p className="flex-1 text-sm text-[#2D2D2D]">{item.message}</p>
             {item.active && (
-              <span className="rounded-full bg-[#C9A96E]/20 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-[#C9A96E]">
+              <span className="rounded-full bg-[#4B8B5A]/10 border border-[#4B8B5A]/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#4B8B5A]">
                 Live
               </span>
             )}
             <button
               onClick={() => destroy(item.id)}
               aria-label="Delete announcement"
-              className="text-white/20 hover:text-red-400 cursor-pointer"
+              className="text-[#6B6B6B]/40 hover:text-[#C44B4B] cursor-pointer transition-colors"
             >
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
         ))}
         {items.length === 0 && (
-          <p className="py-8 text-center text-sm text-white/30">No announcements yet.</p>
+          <p className="py-8 text-center text-sm text-[#6B6B6B]">No announcements yet.</p>
         )}
       </div>
     </div>

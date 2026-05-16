@@ -29,20 +29,20 @@ export default async function AdminDashboard() {
   ]
 
   return (
-    <div className="p-8">
-      <h1 className="mb-1 font-serif text-2xl text-white">Dashboard</h1>
-      <p className="mb-8 text-sm text-white/40">Welcome back, Amy.</p>
+    <div className="p-7">
+      <h1 className="mb-1 font-serif text-xl font-semibold text-[#2D2D2D]">Dashboard</h1>
+      <p className="mb-8 text-sm text-[#6B6B6B]">Welcome back, Amy.</p>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map((card) => (
           <Link
             key={card.label}
             href={card.href}
-            className="rounded-xl border border-white/10 bg-white/5 p-5 transition hover:border-[#C9A96E]/40 cursor-pointer"
+            className="block rounded-lg border border-[#E8E2DA] bg-white p-5 shadow-sm transition-colors hover:border-[#C9A96E]/40 hover:bg-[#FAF8F5] cursor-pointer"
           >
             <card.icon className="mb-3 h-5 w-5 text-[#C9A96E]" />
-            <p className="text-2xl font-semibold text-white">{card.value}</p>
-            <p className="mt-1 text-xs text-white/40">{card.label}</p>
+            <p className="text-2xl font-bold text-[#2D2D2D]">{card.value}</p>
+            <p className="mt-1 text-xs text-[#6B6B6B]">{card.label}</p>
           </Link>
         ))}
       </div>

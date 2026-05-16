@@ -44,19 +44,19 @@ export function ServiceForm({ initial, onClose, onSaved }: Props) {
     onClose()
   }
 
-  const field = 'rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#C9A96E] w-full'
+  const field = 'rounded-lg border border-[#D9D1C7] bg-white px-3 py-2.5 text-sm text-[#2D2D2D] placeholder:text-[#6B6B6B]/50 outline-none focus:border-[#C9A96E] w-full'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1A1A1A] p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-[#E8E2DA] bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="font-serif text-lg text-white">{isEdit ? 'Edit Service' : 'Add Service'}</h2>
-          <button onClick={onClose} className="text-white/40 hover:text-white cursor-pointer"><X className="h-4 w-4" /></button>
+          <h2 className="font-serif text-lg font-semibold text-[#2D2D2D]">{isEdit ? 'Edit Service' : 'Add Service'}</h2>
+          <button onClick={onClose} className="text-[#6B6B6B] hover:text-[#2D2D2D] cursor-pointer"><X className="h-4 w-4" /></button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
           <div>
-            <label className="mb-1 block text-xs text-white/40">Category</label>
+            <label className="mb-1 block text-xs text-[#6B6B6B]">Category</label>
             <select {...register('category')} className={field}>
               <option value="lashes">Lashes</option>
               <option value="brows">Brows</option>
@@ -65,23 +65,23 @@ export function ServiceForm({ initial, onClose, onSaved }: Props) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-white/40">Group label (optional)</label>
+            <label className="mb-1 block text-xs text-[#6B6B6B]">Group label (optional)</label>
             <input {...register('group_label')} placeholder="e.g. Classic" className={field} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-white/40">Service name</label>
+            <label className="mb-1 block text-xs text-[#6B6B6B]">Service name</label>
             <input {...register('name')} placeholder="Classic Set" className={field} />
-            {errors.name && <p className="mt-1 text-xs text-red-400">{errors.name.message}</p>}
+            {errors.name && <p className="mt-1 text-xs text-[#C44B4B]">{errors.name.message}</p>}
           </div>
           <div>
-            <label className="mb-1 block text-xs text-white/40">Duration</label>
+            <label className="mb-1 block text-xs text-[#6B6B6B]">Duration</label>
             <input {...register('duration')} placeholder="2 hrs 30 mins" className={field} />
-            {errors.duration && <p className="mt-1 text-xs text-red-400">{errors.duration.message}</p>}
+            {errors.duration && <p className="mt-1 text-xs text-[#C44B4B]">{errors.duration.message}</p>}
           </div>
           <div>
-            <label className="mb-1 block text-xs text-white/40">Price</label>
+            <label className="mb-1 block text-xs text-[#6B6B6B]">Price</label>
             <input {...register('price')} placeholder="$185" className={field} />
-            {errors.price && <p className="mt-1 text-xs text-red-400">{errors.price.message}</p>}
+            {errors.price && <p className="mt-1 text-xs text-[#C44B4B]">{errors.price.message}</p>}
           </div>
 
           <button

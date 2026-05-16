@@ -15,7 +15,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const password = credentials.password as string
         if (email !== process.env.ADMIN_EMAIL) return null
         if (!process.env.ADMIN_PASSWORD_HASH) return null
-        const valid = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH)
+        // dotenv-expand mangles $ in bcrypt hashes — .env stores them as \$ to preserve literals
+        const hash = process.env.ADMIN_PASSWORD_HASH.replace(/\\\$/g, '$')
+        const valid = await bcrypt.compare(password, hash)
         if (!valid) return null
         return { id: '1', name: 'Amy', email }
       },

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, Trash2, ToggleLeft, ToggleRight, Plus } from 'lucide-react'
+import { Pencil, Trash2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { ServiceForm } from './service-form'
 import { cn } from '@/lib/utils'
@@ -55,7 +55,10 @@ export function ServiceTable({ services: initial }: { services: Service[] }) {
       )}
 
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-serif text-2xl text-white">Services</h1>
+        <div>
+          <h1 className="font-serif text-xl font-semibold text-[#2D2D2D]">Services</h1>
+          <p className="mt-0.5 text-sm text-[#6B6B6B]">Manage your service catalog.</p>
+        </div>
         <button
           onClick={() => setAdding(true)}
           className="flex items-center gap-2 rounded-lg bg-[#C9A96E] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#A68B4E] cursor-pointer"
@@ -69,37 +72,55 @@ export function ServiceTable({ services: initial }: { services: Service[] }) {
         if (!rows.length) return null
         return (
           <div key={cat} className="mb-8">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-[#C9A96E]">
+            <h2 className="mb-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[#C9A96E]">
               {CATEGORY_LABELS[cat]}
             </h2>
-            <div className="overflow-hidden rounded-xl border border-white/10">
+            <div className="overflow-hidden rounded-lg border border-[#E8E2DA] bg-white shadow-sm">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/10 bg-white/5 text-left text-xs text-white/40">
-                    <th className="px-4 py-3">Service</th>
-                    <th className="px-4 py-3">Duration</th>
-                    <th className="px-4 py-3">Price</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3" />
+                  <tr className="bg-[#F0EBE4] text-left">
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[#6B6B6B] border-b border-[#E8E2DA]">Service</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[#6B6B6B] border-b border-[#E8E2DA]">Duration</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[#6B6B6B] border-b border-[#E8E2DA]">Price</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[#6B6B6B] border-b border-[#E8E2DA]">Status</th>
+                    <th className="px-4 py-3 border-b border-[#E8E2DA]" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody>
                   {rows.map((svc) => (
-                    <tr key={svc.id} className={cn('transition hover:bg-white/5', !svc.enabled && 'opacity-40')}>
-                      <td className="px-4 py-3 text-white">{svc.name}</td>
-                      <td className="px-4 py-3 text-white/50">{svc.duration}</td>
-                      <td className="px-4 py-3 font-serif text-[#C9A96E]">{svc.price}</td>
-                      <td className="px-4 py-3">
+                    <tr key={svc.id} className={cn('transition hover:bg-[#F0EBE4]', !svc.enabled && 'opacity-50')}>
+                      <td className="px-4 py-3 text-[13px] border-b border-[#E8E2DA] text-[#2D2D2D]">{svc.name}</td>
+                      <td className="px-4 py-3 text-[13px] border-b border-[#E8E2DA] text-[#6B6B6B]">{svc.duration}</td>
+                      <td className="px-4 py-3 text-[13px] border-b border-[#E8E2DA] font-serif text-[#A68B4E]">{svc.price}</td>
+                      <td className="px-4 py-3 text-[13px] border-b border-[#E8E2DA]">
                         <button onClick={() => toggle(svc)} className="cursor-pointer">
                           {svc.enabled
-                            ? <ToggleRight className="h-5 w-5 text-[#C9A96E]" />
-                            : <ToggleLeft  className="h-5 w-5 text-white/30"   />}
+                            ? (
+                              <span className="bg-[#4B8B5A]/10 text-[#4B8B5A] border border-[#4B8B5A]/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                                Active
+                              </span>
+                            ) : (
+                              <span className="bg-[#F0EBE4] text-[#6B6B6B] border border-[#D9D1C7] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                                Disabled
+                              </span>
+                            )
+                          }
                         </button>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <button onClick={() => setEditing(svc)} className="text-white/30 hover:text-white cursor-pointer"><Pencil className="h-3.5 w-3.5" /></button>
-                          <button onClick={() => destroy(svc.id)} className="text-white/30 hover:text-red-400 cursor-pointer"><Trash2 className="h-3.5 w-3.5" /></button>
+                      <td className="px-4 py-3 text-[13px] border-b border-[#E8E2DA]">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setEditing(svc)}
+                            className="border border-[#D9D1C7] text-[#2D2D2D] hover:bg-[#F0EBE4] text-xs px-2.5 py-1 rounded-md transition cursor-pointer"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={() => destroy(svc.id)}
+                            className="border border-[#C44B4B]/30 text-[#C44B4B] hover:bg-[#C44B4B]/10 text-xs px-2.5 py-1 rounded-md transition cursor-pointer"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
                         </div>
                       </td>
                     </tr>

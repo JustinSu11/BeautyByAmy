@@ -61,15 +61,15 @@ export default function WaiversPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-7">
       {uploading && (
         <WaiverUploadForm onClose={() => setUploading(false)} onUploaded={load} />
       )}
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl text-white">Waivers</h1>
-          <p className="text-sm text-white/40">View, download, and manually upload signed client waivers.</p>
+          <h1 className="font-serif text-xl font-semibold text-[#2D2D2D]">Waivers</h1>
+          <p className="text-sm text-[#6B6B6B]">View, download, and manually upload signed client waivers.</p>
         </div>
         <button
           onClick={() => setUploading(true)}
@@ -82,12 +82,12 @@ export default function WaiversPage() {
       {/* Search + filter */}
       <div className="mb-4 flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#6B6B6B]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by client name…"
-            className="w-full rounded-lg border border-white/10 bg-white/5 py-2.5 pl-9 pr-4 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#C9A96E]"
+            className="w-full rounded-[7px] border border-[#D9D1C7] bg-white py-2 pl-9 pr-4 text-[13px] text-[#2D2D2D] placeholder:text-[#6B6B6B]/50 outline-none focus:border-[#C9A96E]"
           />
         </div>
         <div className="flex gap-1.5">
@@ -98,8 +98,8 @@ export default function WaiversPage() {
               className={cn(
                 'rounded-lg border px-3 py-2 text-xs font-semibold capitalize transition cursor-pointer',
                 filter === f
-                  ? 'border-[#C9A96E]/40 bg-[#C9A96E]/15 text-[#C9A96E]'
-                  : 'border-white/10 text-white/40 hover:border-white/20 hover:text-white/70',
+                  ? 'border-[#C9A96E]/40 bg-[#C9A96E]/10 text-[#A68B4E]'
+                  : 'border-[#D9D1C7] text-[#6B6B6B] hover:border-[#C9A96E]/30 hover:text-[#2D2D2D]',
               )}
             >
               {f}
@@ -109,44 +109,44 @@ export default function WaiversPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-white/10">
+      <div className="overflow-hidden rounded-lg border border-[#E8E2DA] bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/10 bg-white/5 text-left text-xs text-white/40">
-              <th className="px-4 py-3">Client</th>
-              <th className="px-4 py-3">Service</th>
-              <th className="px-4 py-3">Appt. Date</th>
-              <th className="px-4 py-3">Signed</th>
-              <th className="px-4 py-3">Method</th>
-              <th className="px-4 py-3" />
+            <tr className="bg-[#F0EBE4] text-left">
+              <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[#6B6B6B] border-b border-[#E8E2DA]">Client</th>
+              <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[#6B6B6B] border-b border-[#E8E2DA]">Service</th>
+              <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[#6B6B6B] border-b border-[#E8E2DA]">Appt. Date</th>
+              <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[#6B6B6B] border-b border-[#E8E2DA]">Signed</th>
+              <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[#6B6B6B] border-b border-[#E8E2DA]">Method</th>
+              <th className="px-4 py-3 border-b border-[#E8E2DA]" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody>
             {waivers.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-sm text-white/30">
-                  <FileText className="mx-auto mb-2 h-6 w-6 opacity-30" />
+                <td colSpan={6} className="px-4 py-12 text-center text-sm text-[#6B6B6B]">
+                  <FileText className="mx-auto mb-2 h-6 w-6 text-[#6B6B6B]/30" />
                   No waivers found
                 </td>
               </tr>
             )}
             {waivers.map((w) => (
-              <tr key={w.id} className="hover:bg-white/5 transition">
-                <td className="px-4 py-3 font-medium text-white">{w.client_name}</td>
-                <td className="px-4 py-3 text-white/50">{w.service}</td>
-                <td className="px-4 py-3 text-white/50">{formatDate(w.appointment_date)}</td>
-                <td className="px-4 py-3 text-white/50">
+              <tr key={w.id} className="hover:bg-[#F0EBE4] transition border-b border-[#E8E2DA]">
+                <td className="px-4 py-3 font-medium text-[#2D2D2D]">{w.client_name}</td>
+                <td className="px-4 py-3 text-[#6B6B6B]">{w.service}</td>
+                <td className="px-4 py-3 text-[#6B6B6B]">{formatDate(w.appointment_date)}</td>
+                <td className="px-4 py-3 text-[#6B6B6B]">
                   {w.signed_at
                     ? formatDate(w.signed_at)
-                    : <span className="rounded-full bg-[#C9A96E]/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#C9A96E]">Pending</span>
+                    : <span className="rounded-full bg-[#C9A96E]/10 border border-[#C9A96E]/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#C9A96E]">Pending</span>
                   }
                 </td>
                 <td className="px-4 py-3">
                   <span className={cn(
-                    'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
+                    'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide border',
                     w.method === 'digital'
-                      ? 'bg-green-500/15 text-green-400'
-                      : 'bg-purple-500/15 text-purple-300',
+                      ? 'bg-[#4B8B5A]/10 text-[#4B8B5A] border-[#4B8B5A]/30'
+                      : 'bg-[#C9A96E]/10 text-[#A68B4E] border-[#C9A96E]/30',
                   )}>
                     {w.method}
                   </span>
@@ -156,14 +156,14 @@ export default function WaiversPage() {
                     <button
                       onClick={() => download(w.id)}
                       aria-label={`Download waiver for ${w.client_name}`}
-                      className="text-white/30 hover:text-[#C9A96E] transition cursor-pointer"
+                      className="text-[#6B6B6B]/50 hover:text-[#C9A96E] transition cursor-pointer"
                     >
                       <Download className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => destroy(w.id, w.client_name)}
                       aria-label={`Delete waiver for ${w.client_name}`}
-                      className="text-white/30 hover:text-red-400 transition cursor-pointer"
+                      className="text-[#6B6B6B]/50 hover:text-[#C44B4B] transition cursor-pointer"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
