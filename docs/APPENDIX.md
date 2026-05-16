@@ -3,6 +3,10 @@
 A directory-by-directory and file-by-file reference for developers. Describes what each file does,
 why it exists, and any non-obvious conventions.
 
+**When to update this file:** Any time a file or directory is added, removed, renamed, or its
+purpose meaningfully changes. Also update when a module gains or loses a major responsibility.
+Keep it in sync with reality — a stale appendix is worse than no appendix.
+
 ---
 
 ## Repository Root
