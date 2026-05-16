@@ -3,6 +3,8 @@ import { db } from '@/db'
 import { bookings, customers, waivers, waiverTokens } from '@/db/schema'
 import { CURRENT_WAIVER_VERSION } from '@/lib/waiver-config'
 import { upsertSquareCustomer, saveCardOnFile, createSquareAppointment } from '@/lib/square'
+import { sendWaiverEmail } from '@/lib/email'
+import { services } from '@/lib/services-data'
 import { eq, and, gt } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -99,6 +101,7 @@ export async function POST(req: NextRequest) {
 
   // Check if this customer already has a valid unexpired waiver for the current version
   let needsWaiver = false
+  let hasPriorWaiver = false
   if (requiresWaiver) {
     const [existingWaiver] = await db
       .select()
@@ -112,6 +115,7 @@ export async function POST(req: NextRequest) {
       )
       .limit(1)
     needsWaiver = !existingWaiver
+    hasPriorWaiver = !!existingWaiver
   }
 
   // Create local booking record and waiver token if needed
@@ -145,6 +149,36 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('[bookings] DB insert failed', { squareBookingId, err })
     return NextResponse.json({ error: 'Booking created but could not be saved. Please contact us.' }, { status: 500 })
+  }
+
+  // Send waiver PDF email if this booking requires one
+  if (needsWaiver) {
+    try {
+      const service = services.find((s) => s.id === serviceId)
+      const serviceName = service?.name ?? 'your appointment'
+      const appointmentDate = new Date(startsAt).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+
+      // PMU services: send re-consent if client has a prior waiver, otherwise full consent
+      const waiverKey =
+        service?.category === 'permanent-makeup'
+          ? hasPriorWaiver ? 'reconsent' : 'pmu'
+          : 'lash'
+
+      await sendWaiverEmail({ to: email, clientName: name, serviceName, appointmentDate, waiverKey })
+
+      await db
+        .update(bookings)
+        .set({ waiverSentAt: new Date() })
+        .where(eq(bookings.id, booking.id))
+    } catch (err) {
+      // Non-fatal: booking is confirmed; log and continue
+      console.error('[bookings] Waiver email failed', { bookingId: booking.id, err })
+    }
   }
 
   return NextResponse.json({ ok: true, bookingId: booking.id, needsWaiver })

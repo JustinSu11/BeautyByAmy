@@ -31,11 +31,11 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "apps/.next/types/**/*.ts",
     "next-env.d.ts",
     "tailwind.config.mjs",
-    ".next/types/**/*.ts"
-, "src/components/ui/spa-icon.jsx"  ],
+    ".next/types/**/*.ts",
+    "src/components/ui/spa-icon.jsx"
+  ],
   "exclude": [
     "node_modules"
   ]
