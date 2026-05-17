@@ -13,6 +13,7 @@ export interface CustomerInfo {
 
 interface BookingState {
   step: BookingStep
+  services: Service[]
   selectedService: Service | null
   selectedDate: Date | null
   selectedTime: string | null
@@ -41,7 +42,13 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
-export function BookingProvider({ children }: { children: ReactNode }) {
+export function BookingProvider({
+  children,
+  services,
+}: {
+  children: ReactNode
+  services: Service[]
+}) {
   const [step, setStep] = useState<BookingStep>('booking')
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -85,6 +92,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       value={{
         step,
         setStep,
+        services,
         selectedService,
         selectService,
         selectedDate,

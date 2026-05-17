@@ -8,7 +8,7 @@ import { ChevronDown, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function ServiceDropdown() {
-  const { selectedService, selectService } = useBooking()
+  const { selectedService, selectService, services } = useBooking()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -63,7 +63,7 @@ export function ServiceDropdown() {
           className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[420px] overflow-y-auto rounded-xl border border-border bg-card shadow-xl"
         >
           {categories.map((cat) => {
-            const catServices = getServicesByCategory(cat.id)
+            const catServices = getServicesByCategory(services, cat.id)
             if (catServices.length === 0) return null
             return (
               <div key={cat.id}>

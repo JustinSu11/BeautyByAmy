@@ -4,17 +4,11 @@ import { db } from '@/db'
 import { waiverTokens, bookings, customers, waivers } from '@/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { z } from 'zod'
-import { services } from '@/lib/services-data'
+import { fetchSquareServices } from '@/lib/square'
+import { inferMetadata } from '@/lib/services-data'
 import { WaiverWizard } from './waiver-form'
 
 type WaiverType = 'lash' | 'pmu' | 'reconsent'
-
-function deriveWaiverType(category: string, hasPriorWaiver: boolean): WaiverType {
-  if (category === 'permanent-makeup') {
-    return hasPriorWaiver ? 'reconsent' : 'pmu'
-  }
-  return 'lash'
-}
 
 export default async function WaiverPage({
   searchParams,
@@ -52,10 +46,14 @@ export default async function WaiverPage({
 
   if (!row || new Date() > row.expiresAt) return <InvalidLink />
 
-  // Resolve service name + category
-  const service = services.find((s) => s.id === row.serviceId)
-  const serviceName = service?.name ?? 'Beauty Service'
-  const category = service?.category ?? 'eyelashes'
+  // Resolve service name + category from Square catalog
+  const squareServices = await fetchSquareServices()
+  const squareService = squareServices.find((s) => s.id === row.serviceId)
+  const serviceName = squareService?.name ?? 'Beauty Service'
+  const meta = squareService
+    ? inferMetadata(squareService.name)
+    : inferMetadata(serviceName)
+  const category = meta.category
 
   // PMU returning clients get the shorter re-consent form
   let waiverType: WaiverType = 'lash'

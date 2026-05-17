@@ -1,5 +1,7 @@
 // apps/web/src/lib/square.ts
 import { SquareClient, SquareEnvironment } from 'square'
+import type { Service } from './services-data'
+import { inferMetadata } from './services-data'
 
 const environment =
   process.env.NODE_ENV === 'production'
@@ -118,4 +120,37 @@ export async function appendCustomerNote(
     note: updated,
     ...(version !== undefined && { version }),
   })
+}
+
+/**
+ * Fetch bookable services from the Square catalog.
+ * Returns items that have at least one variation with a serviceDuration set.
+ * Each returned Service's `id` is the Square variation ID.
+ */
+export async function fetchSquareServices(): Promise<Service[]> {
+  const page = await squareClient.catalog.list({ types: 'ITEM' })
+  const objects = page.data
+  if (!objects || objects.length === 0) return []
+
+  const result: Service[] = []
+
+  for (const item of objects) {
+    if (item.type !== 'ITEM' || !item.itemData?.variations) continue
+    for (const rawVariation of item.itemData.variations) {
+      // Narrow to ITEM_VARIATION — catalog list with types='ITEM' includes nested variations
+      if (rawVariation.type !== 'ITEM_VARIATION') continue
+      const variation = rawVariation // type: CatalogObject.ItemVariation
+      const dur = variation.itemVariationData?.serviceDuration
+      if (!dur) continue // not a bookable service
+      const id = variation.id
+      if (!id) continue
+      const name = item.itemData.name ?? variation.itemVariationData?.name ?? 'Service'
+      const priceAmount = variation.itemVariationData?.priceMoney?.amount
+      const price = priceAmount ? Number(priceAmount) / 100 : 0
+      const duration = Number(dur) / 60000 // ms → minutes
+      result.push({ id, name, duration, price, ...inferMetadata(name) })
+    }
+  }
+
+  return result.sort((a, b) => a.name.localeCompare(b.name))
 }

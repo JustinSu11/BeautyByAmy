@@ -4,9 +4,15 @@ import { db } from '@/db'
 import { waivers, waiverTokens, bookings, customers } from '@/db/schema'
 import { CURRENT_WAIVER_VERSION } from '@/lib/waiver-config'
 import { appendCustomerNote } from '@/lib/square'
-import { services } from '@/lib/services-data'
 import { eq, and } from 'drizzle-orm'
 import { z } from 'zod'
+
+/** Validity period in days, keyed by waiver type. */
+const WAIVER_VALIDITY_DAYS: Record<'lash' | 'pmu' | 'reconsent', number> = {
+  lash: 365,
+  pmu: 730,
+  reconsent: 730,
+}
 
 const Schema = z.object({
   token: z.string().uuid(),
@@ -41,8 +47,7 @@ export async function POST(req: NextRequest) {
 
   const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? null
 
-  const service = services.find((s) => s.id === tokenRow.serviceId)
-  const validityDays = service?.waiverValidityDays ?? 365
+  const validityDays = WAIVER_VALIDITY_DAYS[parsed.data.waiverType]
   const waiverExpiresAt = new Date(Date.now() + validityDays * 24 * 60 * 60 * 1000)
 
   try {

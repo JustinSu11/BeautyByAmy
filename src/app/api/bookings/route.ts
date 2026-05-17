@@ -4,7 +4,7 @@ import { bookings, customers, waivers, waiverTokens } from '@/db/schema'
 import { CURRENT_WAIVER_VERSION } from '@/lib/waiver-config'
 import { upsertSquareCustomer, saveCardOnFile, createSquareAppointment } from '@/lib/square'
 import { sendWaiverEmail } from '@/lib/email'
-import { services } from '@/lib/services-data'
+import { inferMetadata } from '@/lib/services-data'
 import { eq, and, gt } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -22,6 +22,7 @@ const Schema = z.object({
   phone: z.string().min(7),
   email: z.string().email(),
   serviceVariationId: z.string(),
+  serviceName: z.string(),
   teamMemberId: z.string(),
   startsAt: z.string(),
   durationMinutes: z.number().int().positive(),
@@ -42,12 +43,15 @@ export async function POST(req: NextRequest) {
     phone,
     email,
     serviceVariationId,
+    serviceName,
     teamMemberId,
     startsAt,
     durationMinutes,
     serviceId,
     requiresWaiver,
   } = parsed.data
+
+  const serviceMeta = inferMetadata(serviceName)
 
   // Upsert Square customer and local customer record
   let squareCustomerId: string
@@ -154,8 +158,6 @@ export async function POST(req: NextRequest) {
   // Send waiver PDF email if this booking requires one
   if (needsWaiver) {
     try {
-      const service = services.find((s) => s.id === serviceId)
-      const serviceName = service?.name ?? 'your appointment'
       const appointmentDate = new Date(startsAt).toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
@@ -165,7 +167,7 @@ export async function POST(req: NextRequest) {
 
       // PMU services: send re-consent if client has a prior waiver, otherwise full consent
       const waiverKey =
-        service?.category === 'permanent-makeup'
+        serviceMeta.category === 'permanent-makeup'
           ? hasPriorWaiver ? 'reconsent' : 'pmu'
           : 'lash'
 

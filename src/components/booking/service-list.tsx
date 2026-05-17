@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { categories, getServicesByCategory } from '@/lib/services-data'
+import { useBooking } from '@/lib/booking-context'
 import { ServiceCard } from './service-card'
 import { Eye, PenLine, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -13,6 +14,7 @@ const categoryIcons = {
 }
 
 export function ServiceList() {
+  const { services } = useBooking()
   const [activeCategory, setActiveCategory] = useState<string>(categories[0].id)
 
   return (
@@ -22,7 +24,7 @@ export function ServiceList() {
         {categories.map((cat) => {
           const Icon = categoryIcons[cat.id]
           const isActive = activeCategory === cat.id
-          const count = getServicesByCategory(cat.id).length
+          const count = getServicesByCategory(services, cat.id).length
           return (
             <button
               key={cat.id}
@@ -58,7 +60,7 @@ export function ServiceList() {
           className="flex flex-col gap-3"
         >
           {activeCategory === cat.id &&
-            getServicesByCategory(cat.id).map((service) => (
+            getServicesByCategory(services, cat.id).map((service) => (
               <ServiceCard key={service.id} service={service} />
             ))}
         </div>
