@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/db'
 import { bookings, customers, waivers, waiverTokens } from '@/db/schema'
 import { CURRENT_WAIVER_VERSION } from '@/lib/waiver-config'
-import { upsertSquareCustomer, saveCardOnFile, createSquareAppointment } from '@/lib/square'
+import { upsertSquareCustomer, saveCardOnFile, createSquareAppointment, getPrimaryTeamMemberId } from '@/lib/square'
 import { sendWaiverEmail } from '@/lib/email'
 import { inferMetadata } from '@/lib/services-data'
 import { eq, and, gt } from 'drizzle-orm'
@@ -23,7 +23,6 @@ const Schema = z.object({
   email: z.string().email(),
   serviceVariationId: z.string(),
   serviceName: z.string(),
-  teamMemberId: z.string(),
   startsAt: z.string(),
   durationMinutes: z.number().int().positive(),
   serviceId: z.string(),
@@ -44,7 +43,6 @@ export async function POST(req: NextRequest) {
     email,
     serviceVariationId,
     serviceName,
-    teamMemberId,
     startsAt,
     durationMinutes,
     serviceId,
@@ -88,6 +86,7 @@ export async function POST(req: NextRequest) {
   // Create appointment in Square (shows on Amy's calendar)
   let squareBookingId: string
   try {
+    const teamMemberId = await getPrimaryTeamMemberId()
     squareBookingId = await createSquareAppointment({
       squareCustomerId,
       serviceVariationId,

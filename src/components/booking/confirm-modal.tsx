@@ -21,14 +21,9 @@ declare global {
 interface ConfirmModalProps {
   onClose: () => void
   onSuccess: () => void
-  teamMemberId: string
 }
 
-export function ConfirmModal({
-  onClose,
-  onSuccess,
-  teamMemberId,
-}: ConfirmModalProps) {
+export function ConfirmModal({ onClose, onSuccess }: ConfirmModalProps) {
   const { customerInfo, selectedService, selectedDate, selectedTime } = useBooking()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -131,7 +126,6 @@ export function ConfirmModal({
           // selectedService.id is the Square variation ID from fetchSquareServices
           serviceVariationId: selectedService.id,
           serviceName: selectedService.name,
-          teamMemberId,
           startsAt,
           durationMinutes: selectedService.duration,
           serviceId: selectedService.id,

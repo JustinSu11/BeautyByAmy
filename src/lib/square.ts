@@ -13,6 +13,20 @@ export const squareClient = new SquareClient({
   environment,
 })
 
+// Cached team member ID — Amy is the only team member, so we fetch once and reuse.
+let _teamMemberId: string | null = null
+
+export async function getPrimaryTeamMemberId(): Promise<string> {
+  if (_teamMemberId) return _teamMemberId
+  const result = await squareClient.teamMembers.search({
+    query: { filter: { locationIds: [process.env.SQUARE_LOCATION_ID!], status: 'ACTIVE' } },
+  })
+  const id = result.teamMembers?.[0]?.id
+  if (!id) throw new Error('No active Square team members found for this location')
+  _teamMemberId = id
+  return id
+}
+
 export interface SquareCustomerResult {
   squareCustomerId: string
 }

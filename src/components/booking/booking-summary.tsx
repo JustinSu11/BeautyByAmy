@@ -148,7 +148,6 @@ export function BookingSummary({ className }: { className?: string }) {
                 setModalOpen(false)
                 setConfirmed(true)
               }}
-              teamMemberId={process.env.NEXT_PUBLIC_SQUARE_TEAM_MEMBER_ID ?? ''}
             />
           )}
 
