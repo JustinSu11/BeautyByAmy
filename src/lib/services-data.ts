@@ -4,6 +4,9 @@ export interface Service {
   category: 'eyelashes' | 'brows' | 'permanent-makeup'
   duration: number // in minutes
   price: number
+  /** Square catalog object version — required by the Bookings API for optimistic locking.
+   *  Serialized as a string because JSON cannot represent BigInt. */
+  variationVersion: string
   /** True for high-investment services (PMU + full lash sets) that require a booking deposit */
   requiresDeposit?: boolean
   /** True for PMU and first-time lash services that require a signed consent waiver */

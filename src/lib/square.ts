@@ -13,8 +13,11 @@ export const squareClient = new SquareClient({
   environment,
 })
 
-// Cached team member ID — Amy is the only team member, so we fetch once and reuse.
+// In-memory caches — server process lifetime, shared across all requests.
+// Services TTL matches the /api/services ISR window so they stay in sync.
 let _teamMemberId: string | null = null
+let _servicesCache: { data: Service[]; fetchedAt: number } | null = null
+const SERVICES_TTL_MS = 3_600_000 // 1 hour
 
 export async function getPrimaryTeamMemberId(): Promise<string> {
   if (_teamMemberId) return _teamMemberId
@@ -138,10 +141,17 @@ export async function appendCustomerNote(
 
 /**
  * Fetch bookable services from the Square catalog.
- * Returns items that have at least one variation with a serviceDuration set.
- * Each returned Service's `id` is the Square variation ID.
+ * Results are cached in-process for 1 hour so repeat calls (e.g. homepage + booking page
+ * in the same server process) are instant after the first fetch.
+ *
+ * Each returned Service's `id` is the Square variation ID and `variationVersion` is the
+ * catalog object version required by the Square Bookings API for optimistic locking.
  */
 export async function fetchSquareServices(): Promise<Service[]> {
+  if (_servicesCache && Date.now() - _servicesCache.fetchedAt < SERVICES_TTL_MS) {
+    return _servicesCache.data
+  }
+
   const page = await squareClient.catalog.list({ types: 'ITEM' })
   const objects = page.data
   if (!objects || objects.length === 0) return []
@@ -153,7 +163,7 @@ export async function fetchSquareServices(): Promise<Service[]> {
     for (const rawVariation of item.itemData.variations) {
       // Narrow to ITEM_VARIATION — catalog list with types='ITEM' includes nested variations
       if (rawVariation.type !== 'ITEM_VARIATION') continue
-      const variation = rawVariation // type: CatalogObject.ItemVariation
+      const variation = rawVariation
       const dur = variation.itemVariationData?.serviceDuration
       if (!dur) continue // not a bookable service
       const id = variation.id
@@ -162,9 +172,13 @@ export async function fetchSquareServices(): Promise<Service[]> {
       const priceAmount = variation.itemVariationData?.priceMoney?.amount
       const price = priceAmount ? Number(priceAmount) / 100 : 0
       const duration = Number(dur) / 60000 // ms → minutes
-      result.push({ id, name, duration, price, ...inferMetadata(name) })
+      // Serialize BigInt as string — JSON.stringify throws on BigInt values
+      const variationVersion = (variation.version ?? BigInt(0)).toString()
+      result.push({ id, name, duration, price, variationVersion, ...inferMetadata(name) })
     }
   }
 
-  return result.sort((a, b) => a.name.localeCompare(b.name))
+  const data = result.sort((a, b) => a.name.localeCompare(b.name))
+  _servicesCache = { data, fetchedAt: Date.now() }
+  return data
 }

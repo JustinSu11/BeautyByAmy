@@ -22,6 +22,7 @@ const Schema = z.object({
   phone: z.string().min(7),
   email: z.string().email(),
   serviceVariationId: z.string(),
+  serviceVariationVersion: z.string(), // BigInt serialized as string
   serviceName: z.string(),
   startsAt: z.string(),
   durationMinutes: z.number().int().positive(),
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
     phone,
     email,
     serviceVariationId,
+    serviceVariationVersion,
     serviceName,
     startsAt,
     durationMinutes,
@@ -90,6 +92,7 @@ export async function POST(req: NextRequest) {
     squareBookingId = await createSquareAppointment({
       squareCustomerId,
       serviceVariationId,
+      serviceVariationVersion: BigInt(serviceVariationVersion),
       teamMemberId,
       startsAt,
       durationMinutes,

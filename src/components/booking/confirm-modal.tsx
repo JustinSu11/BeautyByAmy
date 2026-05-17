@@ -125,6 +125,7 @@ export function ConfirmModal({ onClose, onSuccess }: ConfirmModalProps) {
           email: customerInfo.email,
           // selectedService.id is the Square variation ID from fetchSquareServices
           serviceVariationId: selectedService.id,
+          serviceVariationVersion: selectedService.variationVersion,
           serviceName: selectedService.name,
           startsAt,
           durationMinutes: selectedService.duration,
