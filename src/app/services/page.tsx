@@ -21,10 +21,10 @@ export const metadata: Metadata = {
 
 function buildCategoryMeta(img: Record<string, string>) {
   return {
-    lashes: { num: '01', name: 'Lashes',            label: 'Lash Extensions',         description: 'Individually applied silk lashes — classic, hybrid, or full volume — for a seamless, customised look that enhances your natural eye shape.', image: { src: img['gallery-1'], alt: 'Classic eyelash extension close-up' } },
-    brows:  { num: '02', name: 'Brows',             label: 'Brow Services',           description: 'Shape, tint, and define. Quick, high-impact brow treatments to keep your arches perfectly groomed between appointments.',                     image: { src: img['gallery-2'], alt: 'Brow lamination before and after'    } },
-    pmu:    { num: '03', name: 'Permanent\nMakeup', label: 'Permanent Makeup',        description: 'Semi-permanent artistry for brows and lips — wake up every morning with effortless definition that lasts years, not hours.',                  image: { src: img['gallery-5'], alt: 'Microblading healed result'          } },
-    addons: { num: '04', name: 'Add-ons',           label: 'Consultations & Add-ons', description: "Not sure where to start? Book a consultation with Amy to discuss your goals, skin tone, and lifestyle before committing to a treatment.",    image: { src: img['gallery-6'], alt: 'BeautyByAmy studio suite'           } },
+    lashes: { num: '01', name: 'Lashes',            label: 'Lash Extensions',         description: 'Individually applied silk lashes — classic, hybrid, or full volume — for a seamless, customised look that enhances your natural eye shape.', image: { src: img['service-lashes'], alt: 'Eyelash extension service' } },
+    brows:  { num: '02', name: 'Brows',             label: 'Brow Services',           description: 'Shape, tint, and define. Quick, high-impact brow treatments to keep your arches perfectly groomed between appointments.',                     image: { src: img['service-brows'],  alt: 'Brow artistry service'     } },
+    pmu:    { num: '03', name: 'Permanent\nMakeup', label: 'Permanent Makeup',        description: 'Semi-permanent artistry for brows and lips — wake up every morning with effortless definition that lasts years, not hours.',                  image: { src: img['service-pmu'],    alt: 'Permanent makeup service'  } },
+    addons: { num: '04', name: 'Add-ons',           label: 'Consultations & Add-ons', description: "Not sure where to start? Book a consultation with Amy to discuss your goals, skin tone, and lifestyle before committing to a treatment.",    image: { src: img['service-lashes'], alt: 'BeautyByAmy studio'         } },
   } as const
 }
 
@@ -102,8 +102,8 @@ function OrnamentDivider() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function ServicesPage() {
-  const img = await getSiteImageUrls(['gallery-1', 'gallery-2', 'gallery-3', 'gallery-5', 'gallery-6'])
-  const [categories] = await Promise.all([getCategories(img)])
+  const img = await getSiteImageUrls(['service-lashes', 'service-brows', 'service-pmu'])
+  const categories = await getCategories(img)
   return (
     <div className="linen-bg grain-overlay min-h-screen">
       <SiteNav />
@@ -158,8 +158,8 @@ export default async function ServicesPage() {
               {/* Image */}
               <div className="relative h-[580px] overflow-hidden rounded-[200px_200px_160px_160px] shadow-[0_32px_80px_rgba(45,45,45,0.18)]">
                 <Image
-                  src={img['gallery-3']}
-                  alt="Volume lash set"
+                  src={img['service-lashes']}
+                  alt="Eyelash extension example"
                   fill
                   className="object-cover object-top"
                   sizes="(max-width: 1280px) 50vw, 560px"
@@ -261,7 +261,7 @@ export default async function ServicesPage() {
           {/* ── CTA Banner ─────────────────────────────────────────────── */}
           <div className="relative mt-16 overflow-hidden rounded-3xl">
             <Image
-              src={img['gallery-6']}
+              src={img['service-pmu']}
               alt="BeautyByAmy studio"
               fill
               className="object-cover"

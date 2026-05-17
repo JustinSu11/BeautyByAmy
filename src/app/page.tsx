@@ -7,16 +7,17 @@ import { GallerySection } from '@/components/landing/gallery-section'
 import { TestimonialSection } from '@/components/landing/testimonial-section'
 import { CtaSection } from '@/components/landing/cta-section'
 import { getSiteImageUrls } from '@/lib/site-images'
-
-const ALL_SLOTS = [
-  'hero', 'meet-amy',
-  'service-lashes', 'service-brows', 'service-pmu',
-  'gallery-1', 'gallery-2', 'gallery-3',
-  'gallery-4', 'gallery-5', 'gallery-6',
-]
+import { db } from '@/db'
+import { galleryImages } from '@/db/schema'
 
 export default async function HomePage() {
-  const img = await getSiteImageUrls(ALL_SLOTS)
+  const [img, gallery] = await Promise.all([
+    getSiteImageUrls(['hero', 'meet-amy', 'service-lashes', 'service-brows', 'service-pmu']),
+    db.select({ url: galleryImages.url, label: galleryImages.label })
+      .from(galleryImages)
+      .orderBy(galleryImages.display_order)
+      .limit(6),
+  ])
 
   return (
     <>
@@ -25,7 +26,7 @@ export default async function HomePage() {
         <HeroSection imageUrl={img['hero']} />
         <MeetAmySection imageUrl={img['meet-amy']} />
         <FeaturedServicesSection images={{ lashes: img['service-lashes'], brows: img['service-brows'], pmu: img['service-pmu'] }} />
-        <GallerySection images={{ g1: img['gallery-1'], g2: img['gallery-2'], g3: img['gallery-3'], g4: img['gallery-4'], g5: img['gallery-5'], g6: img['gallery-6'] }} />
+        <GallerySection images={gallery} />
         <TestimonialSection />
         <CtaSection />
       </main>

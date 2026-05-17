@@ -4,26 +4,18 @@ import Image from 'next/image'
 import { useScrollAnimate } from '@/hooks/use-scroll-animate'
 import { cn } from '@/lib/utils'
 
-type GalleryImages = { g1: string; g2: string; g3: string; g4: string; g5: string; g6: string }
+type GalleryImage = { url: string; label: string }
 
-export function GallerySection({ images }: { images: GalleryImages }) {
-  // Top image in each column has a fixed aspect ratio — this drives column height variation.
-  // Bottom image uses flex-1 so it stretches to fill whatever space remains, making all
-  // three columns bottom-align at the same y position.
-  const columns = [
-    {
-      top:    { src: images.g1, alt: 'Classic eyelash extension close-up', aspect: 'aspect-[2/3]'  },
-      bottom: { src: images.g4, alt: 'Lip blush permanent makeup result' },
-    },
-    {
-      top:    { src: images.g2, alt: 'Brow lamination — before & after',   aspect: 'aspect-square' },
-      bottom: { src: images.g5, alt: 'Microblading healed result' },
-    },
-    {
-      top:    { src: images.g3, alt: 'Volume lash set — full look',         aspect: 'aspect-[3/4]'  },
-      bottom: { src: images.g6, alt: 'Studio suite detail' },
-    },
-  ]
+const COLUMN_ASPECTS = ['aspect-[2/3]', 'aspect-square', 'aspect-[3/4]'] as const
+
+export function GallerySection({ images }: { images: GalleryImage[] }) {
+  // Pair images into 3 columns of 2. Any image beyond 6 is ignored; fewer than 6
+  // gracefully collapses — columns with no bottom image simply don't render one.
+  const columns = [0, 1, 2].map((col) => ({
+    top:    images[col * 2]     ?? null,
+    bottom: images[col * 2 + 1] ?? null,
+    aspect: COLUMN_ASPECTS[col],
+  }))
   const { ref, isVisible } = useScrollAnimate()
 
   return (
@@ -56,13 +48,13 @@ export function GallerySection({ images }: { images: GalleryImages }) {
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           )}
         >
-          {columns.map((col) => (
-            <div key={col.top.src} className="flex flex-col gap-3 lg:gap-4 flex-1 min-w-0">
+          {columns.map((col, i) => col.top && (
+            <div key={i} className="flex flex-col gap-3 lg:gap-4 flex-1 min-w-0">
               {/* Top image — fixed aspect ratio, drives the column's visual height */}
-              <div className={cn('group relative overflow-hidden rounded-2xl', col.top.aspect)}>
+              <div className={cn('group relative overflow-hidden rounded-2xl', col.aspect)}>
                 <Image
-                  src={col.top.src}
-                  alt={col.top.alt}
+                  src={col.top.url}
+                  alt={col.top.label}
                   fill
                   className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                   sizes="(max-width: 768px) 50vw, 33vw"
@@ -70,15 +62,17 @@ export function GallerySection({ images }: { images: GalleryImages }) {
               </div>
 
               {/* Bottom image — grows to fill remaining height, all columns bottom-align */}
-              <div className="group relative overflow-hidden rounded-2xl flex-1 min-h-[140px]">
-                <Image
-                  src={col.bottom.src}
-                  alt={col.bottom.alt}
-                  fill
-                  className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                  sizes="(max-width: 768px) 50vw, 33vw"
-                />
-              </div>
+              {col.bottom && (
+                <div className="group relative overflow-hidden rounded-2xl flex-1 min-h-[140px]">
+                  <Image
+                    src={col.bottom.url}
+                    alt={col.bottom.label}
+                    fill
+                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                    sizes="(max-width: 768px) 50vw, 33vw"
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
