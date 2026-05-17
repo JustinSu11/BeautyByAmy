@@ -86,6 +86,8 @@ export const announcements = pgTable('announcements', {
   active: boolean('active').default(false).notNull(),
   /* eslint-disable @typescript-eslint/naming-convention */
   expires_at: timestamp('expires_at'),
+  /** When set, the banner goes live automatically at this time even if active=false */
+  scheduled_for: timestamp('scheduled_for'),
   created_at: timestamp('created_at').defaultNow().notNull(),
   /* eslint-enable @typescript-eslint/naming-convention */
 })

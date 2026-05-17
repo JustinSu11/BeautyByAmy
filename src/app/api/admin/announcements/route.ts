@@ -5,9 +5,10 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 const schema = z.object({
-  message:    z.string().min(1),
-  active:     z.boolean().default(false),
-  expires_at: z.string().datetime().nullable().optional(),
+  message:       z.string().min(1),
+  active:        z.boolean().default(false),
+  expires_at:    z.string().datetime().nullable().optional(),
+  scheduled_for: z.string().datetime().nullable().optional(),
 })
 
 export async function GET() {
@@ -37,9 +38,10 @@ export async function POST(req: Request) {
   const [row] = await db
     .insert(announcements)
     .values({
-      message:    parsed.data.message,
-      active:     parsed.data.active,
-      expires_at: parsed.data.expires_at ? new Date(parsed.data.expires_at) : null,
+      message:       parsed.data.message,
+      active:        parsed.data.active,
+      expires_at:    parsed.data.expires_at    ? new Date(parsed.data.expires_at)    : null,
+      scheduled_for: parsed.data.scheduled_for ? new Date(parsed.data.scheduled_for) : null,
     })
     .returning()
 

@@ -1,17 +1,19 @@
 import { db } from '@/db'
 import { announcements } from '@/db/schema'
-import { and, eq, gt, isNull, or } from 'drizzle-orm'
+import { and, eq, gt, isNull, lte, or } from 'drizzle-orm'
 import { Megaphone } from 'lucide-react'
 
 export async function AnnouncementBanner() {
+  const now = new Date()
   const [data] = await db
     .select({ message: announcements.message })
     .from(announcements)
     .where(
       and(
-        eq(announcements.active, true),
-        // Show if expires_at is null (no expiry) or hasn't passed yet
-        or(isNull(announcements.expires_at), gt(announcements.expires_at, new Date())),
+        // Show if manually active OR scheduled time has arrived
+        or(eq(announcements.active, true), and(isNull(announcements.active), lte(announcements.scheduled_for, now)), lte(announcements.scheduled_for, now)),
+        // Not expired
+        or(isNull(announcements.expires_at), gt(announcements.expires_at, now)),
       ),
     )
     .limit(1)

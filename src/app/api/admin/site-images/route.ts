@@ -5,18 +5,33 @@ import { eq } from 'drizzle-orm'
 import { uploadImage, deleteImage } from '@/lib/cloudinary'
 import { NextResponse } from 'next/server'
 
-const VALID_SLOTS = new Set([
+const ORDERED_SLOTS = [
   'hero', 'meet-amy',
   'gallery-1', 'gallery-2', 'gallery-3',
   'gallery-4', 'gallery-5', 'gallery-6',
-])
+]
+const VALID_SLOTS = new Set(ORDERED_SLOTS)
+
+// Placeholder shown for slots that haven't been uploaded yet
+const PLACEHOLDER_URL = 'https://placehold.co/1920x1080/F5F0EB/A68B4E?text=No+image+set'
 
 export async function GET() {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const data = await db.select().from(siteImages).orderBy(siteImages.slot)
-  return NextResponse.json(data ?? [])
+  const rows = await db.select().from(siteImages)
+  const bySlot = Object.fromEntries(rows.map((r) => [r.slot, r]))
+
+  // Always return all 8 slots so the UI renders every card
+  const data = ORDERED_SLOTS.map((slot) => bySlot[slot] ?? {
+    id: null, slot, cloudinary_id: null,
+    url: PLACEHOLDER_URL,
+    blur_data_url: null,
+    alt: slot,
+    created_at: null,
+  })
+
+  return NextResponse.json(data)
 }
 
 export async function PATCH(req: Request) {
@@ -47,12 +62,15 @@ export async function PATCH(req: Request) {
     try { await deleteImage(existing.cloudinary_id) } catch { /* ignore */ }
   }
 
+  // Upsert — works whether or not the slot row exists yet
   const [row] = await db
-    .update(siteImages)
-    .set({ cloudinary_id, url, blur_data_url, alt: alt || slot })
-    .where(eq(siteImages.slot, slot))
+    .insert(siteImages)
+    .values({ slot, cloudinary_id, url, blur_data_url, alt: alt || slot })
+    .onConflictDoUpdate({
+      target: siteImages.slot,
+      set: { cloudinary_id, url, blur_data_url, alt: alt || slot },
+    })
     .returning()
 
-  if (!row) return NextResponse.json({ error: 'Slot not found' }, { status: 404 })
   return NextResponse.json(row)
 }
