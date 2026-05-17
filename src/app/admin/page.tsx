@@ -34,7 +34,7 @@ export default async function AdminDashboard() {
   const cards = [
     { label: 'Services',           value: stats.services,                         icon: Scissors,   href: '/admin/services'      },
     { label: 'Gallery Images',     value: stats.galleryImages,                    icon: ImageIcon,  href: '/admin/gallery'       },
-    { label: 'Site Images Set',    value: `${stats.siteImages} / 8`,              icon: MonitorPlay, href: '/admin/images'       },
+    { label: 'Site Images Set',    value: `${stats.siteImages} / 11`,              icon: MonitorPlay, href: '/admin/images'       },
     { label: 'Announcement Live',  value: stats.announcementLive ? 'Yes' : 'No',  icon: Megaphone,  href: '/admin/announcements' },
   ]
 

@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server'
 
 const ORDERED_SLOTS = [
   'hero', 'meet-amy',
+  'service-lashes', 'service-brows', 'service-pmu',
   'gallery-1', 'gallery-2', 'gallery-3',
   'gallery-4', 'gallery-5', 'gallery-6',
 ]
@@ -22,7 +23,7 @@ export async function GET() {
   const rows = await db.select().from(siteImages)
   const bySlot = Object.fromEntries(rows.map((r) => [r.slot, r]))
 
-  // Always return all 8 slots so the UI renders every card
+  // Always return all 11 slots so the UI renders every card
   const data = ORDERED_SLOTS.map((slot) => bySlot[slot] ?? {
     id: null, slot, cloudinary_id: null,
     url: PLACEHOLDER_URL,

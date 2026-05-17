@@ -4,25 +4,26 @@ import Image from 'next/image'
 import { useScrollAnimate } from '@/hooks/use-scroll-animate'
 import { cn } from '@/lib/utils'
 
-// Top image in each column has a fixed aspect ratio — this drives column height variation.
-// Bottom image uses flex-1 so it stretches to fill whatever space remains, making all
-// three columns bottom-align at the same y position.
-const columns = [
-  {
-    top:    { src: '/images/gallery-1.jpg', alt: 'Classic eyelash extension close-up', aspect: 'aspect-[2/3]'  },
-    bottom: { src: '/images/gallery-4.jpg', alt: 'Lip blush permanent makeup result' },
-  },
-  {
-    top:    { src: '/images/gallery-2.jpg', alt: 'Brow lamination — before & after',   aspect: 'aspect-square' },
-    bottom: { src: '/images/gallery-5.jpg', alt: 'Microblading healed result' },
-  },
-  {
-    top:    { src: '/images/gallery-3.jpg', alt: 'Volume lash set — full look',         aspect: 'aspect-[3/4]'  },
-    bottom: { src: '/images/gallery-6.jpg', alt: 'Studio suite detail' },
-  },
-]
+type GalleryImages = { g1: string; g2: string; g3: string; g4: string; g5: string; g6: string }
 
-export function GallerySection() {
+export function GallerySection({ images }: { images: GalleryImages }) {
+  // Top image in each column has a fixed aspect ratio — this drives column height variation.
+  // Bottom image uses flex-1 so it stretches to fill whatever space remains, making all
+  // three columns bottom-align at the same y position.
+  const columns = [
+    {
+      top:    { src: images.g1, alt: 'Classic eyelash extension close-up', aspect: 'aspect-[2/3]'  },
+      bottom: { src: images.g4, alt: 'Lip blush permanent makeup result' },
+    },
+    {
+      top:    { src: images.g2, alt: 'Brow lamination — before & after',   aspect: 'aspect-square' },
+      bottom: { src: images.g5, alt: 'Microblading healed result' },
+    },
+    {
+      top:    { src: images.g3, alt: 'Volume lash set — full look',         aspect: 'aspect-[3/4]'  },
+      bottom: { src: images.g6, alt: 'Studio suite detail' },
+    },
+  ]
   const { ref, isVisible } = useScrollAnimate()
 
   return (

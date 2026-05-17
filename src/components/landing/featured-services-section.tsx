@@ -6,34 +6,35 @@ import { useScrollAnimate } from '@/hooks/use-scroll-animate'
 import { cn } from '@/lib/utils'
 import { ArrowRight, Eye, PenLine, Sparkles } from 'lucide-react'
 
-const featuredCategories = [
-  {
-    title: 'Eyelash Extensions',
-    description:
-      'From classic elegance to dramatic volume sets, every lash is individually applied for a seamless, natural look.',
-    icon: Eye,
-    image: '/images/service-lashes.jpg',
-    priceFrom: '$75',
-  },
-  {
-    title: 'Brow Artistry',
-    description:
-      'Lamination, tinting, threading, and henna -- sculpted brows tailored to your unique face shape.',
-    icon: PenLine,
-    image: '/images/service-brows.jpg',
-    priceFrom: '$20',
-  },
-  {
-    title: 'Permanent Makeup',
-    description:
-      'Microblading, powder brows, and lip blush -- wake up every day with effortlessly beautiful definition.',
-    icon: Sparkles,
-    image: '/images/service-pmu.jpg',
-    priceFrom: '$200',
-  },
-]
+type ServiceImages = { lashes: string; brows: string; pmu: string }
 
-export function FeaturedServicesSection() {
+export function FeaturedServicesSection({ images }: { images: ServiceImages }) {
+  const featuredCategories = [
+    {
+      title: 'Eyelash Extensions',
+      description:
+        'From classic elegance to dramatic volume sets, every lash is individually applied for a seamless, natural look.',
+      icon: Eye,
+      image: images.lashes,
+      priceFrom: '$75',
+    },
+    {
+      title: 'Brow Artistry',
+      description:
+        'Lamination, tinting, threading, and henna -- sculpted brows tailored to your unique face shape.',
+      icon: PenLine,
+      image: images.brows,
+      priceFrom: '$20',
+    },
+    {
+      title: 'Permanent Makeup',
+      description:
+        'Microblading, powder brows, and lip blush -- wake up every day with effortlessly beautiful definition.',
+      icon: Sparkles,
+      image: images.pmu,
+      priceFrom: '$200',
+    },
+  ]
   const { ref, isVisible } = useScrollAnimate()
 
   return (

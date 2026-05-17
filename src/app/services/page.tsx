@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { db } from '@/db'
 import { adminServices } from '@/db/schema'
 import { eq } from 'drizzle-orm'
+import { getSiteImageUrls } from '@/lib/site-images'
 
 export const metadata: Metadata = {
   title: 'Services | BeautyByAmy',
@@ -18,21 +19,24 @@ export const metadata: Metadata = {
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-const categoryMeta: Record<string, { num: string; name: string; label: string; description: string; image: { src: string; alt: string } }> = {
-  lashes: { num: '01', name: 'Lashes',            label: 'Lash Extensions',         description: 'Individually applied silk lashes — classic, hybrid, or full volume — for a seamless, customised look that enhances your natural eye shape.', image: { src: '/images/gallery-1.jpg', alt: 'Classic eyelash extension close-up' } },
-  brows:  { num: '02', name: 'Brows',             label: 'Brow Services',           description: 'Shape, tint, and define. Quick, high-impact brow treatments to keep your arches perfectly groomed between appointments.',                     image: { src: '/images/gallery-2.jpg', alt: 'Brow lamination before and after'    } },
-  pmu:    { num: '03', name: 'Permanent\nMakeup', label: 'Permanent Makeup',        description: 'Semi-permanent artistry for brows and lips — wake up every morning with effortless definition that lasts years, not hours.',                  image: { src: '/images/gallery-5.jpg', alt: 'Microblading healed result'          } },
-  addons: { num: '04', name: 'Add-ons',           label: 'Consultations & Add-ons', description: "Not sure where to start? Book a consultation with Amy to discuss your goals, skin tone, and lifestyle before committing to a treatment.",    image: { src: '/images/gallery-6.jpg', alt: 'BeautyByAmy studio suite'           } },
+function buildCategoryMeta(img: Record<string, string>) {
+  return {
+    lashes: { num: '01', name: 'Lashes',            label: 'Lash Extensions',         description: 'Individually applied silk lashes — classic, hybrid, or full volume — for a seamless, customised look that enhances your natural eye shape.', image: { src: img['gallery-1'], alt: 'Classic eyelash extension close-up' } },
+    brows:  { num: '02', name: 'Brows',             label: 'Brow Services',           description: 'Shape, tint, and define. Quick, high-impact brow treatments to keep your arches perfectly groomed between appointments.',                     image: { src: img['gallery-2'], alt: 'Brow lamination before and after'    } },
+    pmu:    { num: '03', name: 'Permanent\nMakeup', label: 'Permanent Makeup',        description: 'Semi-permanent artistry for brows and lips — wake up every morning with effortless definition that lasts years, not hours.',                  image: { src: img['gallery-5'], alt: 'Microblading healed result'          } },
+    addons: { num: '04', name: 'Add-ons',           label: 'Consultations & Add-ons', description: "Not sure where to start? Book a consultation with Amy to discuss your goals, skin tone, and lifestyle before committing to a treatment.",    image: { src: img['gallery-6'], alt: 'BeautyByAmy studio suite'           } },
+  } as const
 }
 
-async function getCategories() {
+async function getCategories(img: Record<string, string>) {
+  const categoryMeta = buildCategoryMeta(img)
   const data = await db
     .select()
     .from(adminServices)
     .where(eq(adminServices.enabled, true))
     .orderBy(adminServices.display_order)
 
-  const categoryOrder = ['lashes', 'brows', 'pmu', 'addons']
+  const categoryOrder = ['lashes', 'brows', 'pmu', 'addons'] as const
   return categoryOrder.map((catId) => {
     const rows = data.filter((r) => r.category === catId)
     const groupLabels = [...new Set(rows.map((r) => r.group_label ?? null))]
@@ -98,7 +102,8 @@ function OrnamentDivider() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function ServicesPage() {
-  const categories = await getCategories()
+  const img = await getSiteImageUrls(['gallery-1', 'gallery-2', 'gallery-3', 'gallery-5', 'gallery-6'])
+  const [categories] = await Promise.all([getCategories(img)])
   return (
     <div className="linen-bg grain-overlay min-h-screen">
       <SiteNav />
@@ -153,7 +158,7 @@ export default async function ServicesPage() {
               {/* Image */}
               <div className="relative h-[580px] overflow-hidden rounded-[200px_200px_160px_160px] shadow-[0_32px_80px_rgba(45,45,45,0.18)]">
                 <Image
-                  src="/images/gallery-3.jpg"
+                  src={img['gallery-3']}
                   alt="Volume lash set"
                   fill
                   className="object-cover object-top"
@@ -256,7 +261,7 @@ export default async function ServicesPage() {
           {/* ── CTA Banner ─────────────────────────────────────────────── */}
           <div className="relative mt-16 overflow-hidden rounded-3xl">
             <Image
-              src="/images/gallery-6.jpg"
+              src={img['gallery-6']}
               alt="BeautyByAmy studio"
               fill
               className="object-cover"

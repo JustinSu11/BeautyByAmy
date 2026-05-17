@@ -4,14 +4,17 @@ import { eq } from 'drizzle-orm'
 
 /** Static fallbacks used when a slot has not been uploaded through the admin panel. */
 const FALLBACKS: Record<string, string> = {
-  'hero':      '/images/hero-bg.jpg',
-  'meet-amy':  '/images/amy-portrait.jpg',
-  'gallery-1': '/images/gallery-1.jpg',
-  'gallery-2': '/images/gallery-2.jpg',
-  'gallery-3': '/images/gallery-3.jpg',
-  'gallery-4': '/images/gallery-4.jpg',
-  'gallery-5': '/images/gallery-5.jpg',
-  'gallery-6': '/images/gallery-6.jpg',
+  'hero':           '/images/hero-bg.jpg',
+  'meet-amy':       '/images/amy-portrait.jpg',
+  'service-lashes': '/images/service-lashes.jpg',
+  'service-brows':  '/images/service-brows.jpg',
+  'service-pmu':    '/images/service-pmu.jpg',
+  'gallery-1':      '/images/gallery-1.jpg',
+  'gallery-2':      '/images/gallery-2.jpg',
+  'gallery-3':      '/images/gallery-3.jpg',
+  'gallery-4':      '/images/gallery-4.jpg',
+  'gallery-5':      '/images/gallery-5.jpg',
+  'gallery-6':      '/images/gallery-6.jpg',
 }
 
 /**

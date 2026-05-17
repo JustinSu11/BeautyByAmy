@@ -8,14 +8,17 @@ import { toast } from 'sonner'
 type SiteImage = { slot: string; url: string; alt: string }
 
 const SLOT_LABELS: Record<string, string> = {
-  'hero':      'Hero Background',
-  'meet-amy':  "Amy's Portrait",
-  'gallery-1': 'Gallery Slot 1',
-  'gallery-2': 'Gallery Slot 2',
-  'gallery-3': 'Gallery Slot 3',
-  'gallery-4': 'Gallery Slot 4',
-  'gallery-5': 'Gallery Slot 5',
-  'gallery-6': 'Gallery Slot 6',
+  'hero':            'Hero Background',
+  'meet-amy':        "Amy's Portrait",
+  'service-lashes':  'Lash Services Image',
+  'service-brows':   'Brow Services Image',
+  'service-pmu':     'Permanent Makeup Image',
+  'gallery-1':       'Gallery Image 1',
+  'gallery-2':       'Gallery Image 2',
+  'gallery-3':       'Gallery Image 3',
+  'gallery-4':       'Gallery Image 4',
+  'gallery-5':       'Gallery Image 5',
+  'gallery-6':       'Gallery Image 6',
 }
 
 function SlotCard({ image, onUpdated }: { image: SiteImage; onUpdated: () => void }) {
