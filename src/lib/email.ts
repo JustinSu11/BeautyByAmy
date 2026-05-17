@@ -5,7 +5,12 @@ import path from 'path'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const FROM = 'BeautyByAmy <appointments@beautybyamy.com>'
+// In development Resend only allows sending from the shared onboarding address.
+// Production uses the verified beautybyamy.com domain.
+const FROM =
+  process.env.NODE_ENV === 'production'
+    ? 'BeautyByAmy <appointments@beautybyamy.com>'
+    : 'BeautyByAmy <onboarding@resend.dev>'
 const REPLY_TO = 'BeautyByAmyLe@gmail.com'
 
 // ── Waiver PDF lookup ─────────────────────────────────────────────────────────

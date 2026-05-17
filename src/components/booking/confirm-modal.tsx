@@ -20,7 +20,7 @@ declare global {
 
 interface ConfirmModalProps {
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (needsWaiver: boolean) => void
 }
 
 export function ConfirmModal({ onClose, onSuccess }: ConfirmModalProps) {
@@ -140,7 +140,8 @@ export function ConfirmModal({ onClose, onSuccess }: ConfirmModalProps) {
         return
       }
 
-      onSuccess()
+      const data = await res.json().catch(() => ({}))
+      onSuccess(data.needsWaiver ?? false)
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {

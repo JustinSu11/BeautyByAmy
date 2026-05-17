@@ -1,11 +1,12 @@
 'use client'
 
+import Link from 'next/link'
 import { useBooking } from '@/lib/booking-context'
 import { ServiceDropdown } from './service-dropdown'
 import { BookingCalendar } from './booking-calendar'
 import { TimeSlotGrid } from './time-slot-grid'
 import { BookingSummary } from './booking-summary'
-import { ArrowLeft, ArrowRight, Shield } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Shield, CheckCircle, Mail, Calendar } from 'lucide-react'
 
 export function BookingSteps() {
   const {
@@ -17,6 +18,7 @@ export function BookingSteps() {
     customerInfo,
     setCustomerInfo,
     canProceed,
+    confirmedNeedsWaiver,
   } = useBooking()
 
   return (
@@ -216,6 +218,60 @@ export function BookingSteps() {
           </div>
 
           <BookingSummary />
+        </div>
+      )}
+
+      {/* ── Confirmed ── */}
+      {step === 'confirmed' && (
+        <div className="mx-auto max-w-md py-12 text-center">
+          <div className="mb-6 flex justify-center">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gold/10">
+              <CheckCircle className="h-10 w-10 text-gold" />
+            </div>
+          </div>
+
+          <h2 className="font-serif text-3xl text-charcoal">You&apos;re Booked!</h2>
+          <p className="mt-2 text-muted-foreground">
+            Your appointment with Amy has been confirmed.
+          </p>
+
+          {/* Booking details recap */}
+          {selectedService && selectedDate && selectedTime && (
+            <div className="mt-8 rounded-xl border border-border bg-card p-5 text-left">
+              <div className="flex items-start gap-3 border-b border-border pb-4">
+                <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+                <div>
+                  <p className="text-sm font-medium text-charcoal">{selectedService.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                    {' · '}
+                    {(() => {
+                      const [h, m] = selectedTime.split(':').map(Number)
+                      const ampm = h >= 12 ? 'PM' : 'AM'
+                      const hour = h > 12 ? h - 12 : h === 0 ? 12 : h
+                      return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`
+                    })()}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 pt-4">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+                <p className="text-sm text-muted-foreground">
+                  {confirmedNeedsWaiver
+                    ? <>A consent form has been sent to <span className="font-medium text-charcoal">{customerInfo.email}</span>. Please sign and return it before your appointment.</>
+                    : <>A confirmation has been sent to <span className="font-medium text-charcoal">{customerInfo.email}</span>.</>
+                  }
+                </p>
+              </div>
+            </div>
+          )}
+
+          <Link
+            href="/"
+            className="mt-8 inline-flex items-center justify-center gap-2 rounded-lg bg-charcoal px-8 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-charcoal/90"
+          >
+            Back to Home
+          </Link>
         </div>
       )}
     </div>

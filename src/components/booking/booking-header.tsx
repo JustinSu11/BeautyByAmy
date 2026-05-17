@@ -37,52 +37,51 @@ export function BookingHeader() {
               </p>
             </div>
           </div>
-          <div className="hidden items-center gap-2 text-sm text-muted-foreground md:flex">
-            <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
-            Accepting bookings
-          </div>
         </div>
 
-        {/* Step indicator */}
-        <nav aria-label="Booking progress" className="flex items-center gap-2">
-          {steps.map((s, i) => {
-            const isComplete = i < currentIndex
-            const isCurrent = i === currentIndex
-            return (
-              <div key={s.key} className="flex flex-1 items-center gap-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      'flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition-colors',
-                      isComplete && 'bg-gold text-primary-foreground',
-                      isCurrent && 'bg-charcoal text-primary-foreground',
-                      !isComplete && !isCurrent && 'bg-muted text-muted-foreground'
-                    )}
-                    aria-current={isCurrent ? 'step' : undefined}
-                  >
-                    {isComplete ? <Check className="h-3.5 w-3.5" /> : s.number}
-                  </span>
-                  <span
-                    className={cn(
-                      'hidden text-sm sm:inline',
-                      isCurrent ? 'font-medium text-charcoal' : 'text-muted-foreground'
-                    )}
-                  >
-                    {s.label}
-                  </span>
+        {/* Step indicator — centered, connectors between items */}
+        {currentIndex >= 0 && (
+          <nav aria-label="Booking progress" className="flex items-center justify-center">
+            {steps.map((s, i) => {
+              const isComplete = i < currentIndex
+              const isCurrent = i === currentIndex
+              return (
+                <div key={s.key} className="flex items-center">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        'flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition-colors',
+                        isComplete && 'bg-gold text-primary-foreground',
+                        isCurrent && 'bg-charcoal text-primary-foreground',
+                        !isComplete && !isCurrent && 'bg-muted text-muted-foreground'
+                      )}
+                      aria-current={isCurrent ? 'step' : undefined}
+                    >
+                      {isComplete ? <Check className="h-3.5 w-3.5" /> : s.number}
+                    </span>
+                    <span
+                      className={cn(
+                        'hidden text-sm sm:inline',
+                        isCurrent ? 'font-medium text-charcoal' : 'text-muted-foreground'
+                      )}
+                    >
+                      {s.label}
+                    </span>
+                  </div>
+                  {i < steps.length - 1 && (
+                    <div
+                      className={cn(
+                        'mx-3 w-12 h-px transition-colors',
+                        i < currentIndex ? 'bg-gold' : 'bg-border'
+                      )}
+                    />
+                  )}
                 </div>
-                {i < steps.length - 1 && (
-                  <div
-                    className={cn(
-                      'mx-2 h-px flex-1 transition-colors',
-                      i < currentIndex ? 'bg-gold' : 'bg-border'
-                    )}
-                  />
-                )}
-              </div>
-            )
-          })}
-        </nav>
+              )
+            })}
+          </nav>
+        )}
+
       </div>
     </header>
   )

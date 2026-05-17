@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
 import type { Service } from './services-data'
 
-export type BookingStep = 'booking' | 'info' | 'summary'
+export type BookingStep = 'booking' | 'info' | 'summary' | 'confirmed'
 
 export interface CustomerInfo {
   name: string
@@ -19,6 +19,7 @@ interface BookingState {
   selectedTime: string | null
   customerInfo: CustomerInfo
   policyAccepted: boolean
+  confirmedNeedsWaiver: boolean | null
 }
 
 interface BookingContextValue extends BookingState {
@@ -28,6 +29,7 @@ interface BookingContextValue extends BookingState {
   setSelectedTime: (time: string | null) => void
   setCustomerInfo: (info: CustomerInfo) => void
   setPolicyAccepted: (accepted: boolean) => void
+  confirm: (needsWaiver: boolean) => void
   totalPrice: number
   totalDuration: number
   canProceed: boolean
@@ -55,6 +57,12 @@ export function BookingProvider({
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>(emptyCustomerInfo)
   const [policyAccepted, setPolicyAccepted] = useState(false)
+  const [confirmedNeedsWaiver, setConfirmedNeedsWaiver] = useState<boolean | null>(null)
+
+  const confirm = useCallback((needsWaiver: boolean) => {
+    setConfirmedNeedsWaiver(needsWaiver)
+    setStep('confirmed')
+  }, [])
 
   const selectService = useCallback((service: Service | null) => {
     setSelectedService(service)
@@ -75,6 +83,8 @@ export function BookingProvider({
         )
       case 'summary':
         return policyAccepted
+      case 'confirmed':
+        return true
     }
   })()
 
@@ -85,6 +95,7 @@ export function BookingProvider({
     setSelectedTime(null)
     setCustomerInfo(emptyCustomerInfo)
     setPolicyAccepted(false)
+    setConfirmedNeedsWaiver(null)
   }, [])
 
   return (
@@ -103,6 +114,8 @@ export function BookingProvider({
         setCustomerInfo,
         policyAccepted,
         setPolicyAccepted,
+        confirmedNeedsWaiver,
+        confirm,
         totalPrice,
         totalDuration,
         canProceed,

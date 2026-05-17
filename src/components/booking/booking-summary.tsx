@@ -26,7 +26,6 @@ function formatTimeLabel(time: string): string {
 
 export function BookingSummary({ className }: { className?: string }) {
   const [modalOpen, setModalOpen] = useState(false)
-  const [confirmed, setConfirmed] = useState(false)
 
   const {
     selectedService,
@@ -39,6 +38,7 @@ export function BookingSummary({ className }: { className?: string }) {
     canProceed,
     policyAccepted,
     setPolicyAccepted,
+    confirm,
   } = useBooking()
 
   if (!selectedService) {
@@ -116,37 +116,27 @@ export function BookingSummary({ className }: { className?: string }) {
             </span>
           </label>
 
-          {confirmed ? (
-            <div className="mt-4 rounded-lg bg-gold/10 p-4 text-center">
-              <p className="font-serif text-lg text-charcoal">Booking Confirmed!</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Check your phone for a confirmation text. If your service requires a
-                consent form, you&apos;ll receive a link before your appointment.
-              </p>
-            </div>
-          ) : (
-            <button
-              type="button"
-              disabled={!policyAccepted}
-              onClick={() => setModalOpen(true)}
-              className={cn(
-                'mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-sm font-semibold transition-colors',
-                policyAccepted
-                  ? 'bg-charcoal text-primary-foreground hover:bg-charcoal/90'
-                  : 'cursor-not-allowed bg-muted text-muted-foreground'
-              )}
-            >
-              <Shield className="h-4 w-4" />
-              Confirm Booking
-            </button>
-          )}
+          <button
+            type="button"
+            disabled={!policyAccepted}
+            onClick={() => setModalOpen(true)}
+            className={cn(
+              'mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-sm font-semibold transition-colors',
+              policyAccepted
+                ? 'bg-charcoal text-primary-foreground hover:bg-charcoal/90'
+                : 'cursor-not-allowed bg-muted text-muted-foreground'
+            )}
+          >
+            <Shield className="h-4 w-4" />
+            Confirm Booking
+          </button>
 
-          {modalOpen && !confirmed && (
+          {modalOpen && (
             <ConfirmModal
               onClose={() => setModalOpen(false)}
-              onSuccess={() => {
+              onSuccess={(needsWaiver) => {
                 setModalOpen(false)
-                setConfirmed(true)
+                confirm(needsWaiver)
               }}
             />
           )}
