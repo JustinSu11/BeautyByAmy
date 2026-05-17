@@ -5,12 +5,8 @@ import { MeetAmySection } from '@/components/landing/meet-amy-section'
 import { FeaturedServicesSection } from '@/components/landing/featured-services-section'
 import { TestimonialSection } from '@/components/landing/testimonial-section'
 import { CtaSection } from '@/components/landing/cta-section'
-import { fetchSquareServices } from '@/lib/square'
 
-// Warm the in-process services cache so the booking page loads instantly.
-export default async function HomePage() {
-  fetchSquareServices().catch(() => {}) // fire-and-forget; don't block the page
-
+export default function HomePage() {
   return (
     <>
       <SiteNav />
