@@ -18,7 +18,6 @@ type GalleryImage = {
   alt: string
   category: string
   label: string
-  aspect?: string
 }
 
 async function getGalleryImages(): Promise<GalleryImage[]> {
@@ -55,18 +54,16 @@ function ImageOverlay({ category, label }: { category: string; label: string }) 
   )
 }
 
+// Alternate aspect ratios so the masonry grid has visual rhythm
+const TOP_ASPECTS    = ['aspect-[2/3]', 'aspect-square', 'aspect-[3/4]']
+const BOTTOM_ASPECTS = ['aspect-[4/3]', 'aspect-[4/3]', 'aspect-[4/3]']
+
 export default async function GalleryPage() {
   const images = await getGalleryImages()
 
-  // Masonry column assignment — guard against fewer than 6 images
-  const safeImages = images.slice(0, 6)
-  const columns = safeImages.length >= 6
-    ? [
-        { top: safeImages[0], bottom: safeImages[3] },
-        { top: safeImages[1], bottom: safeImages[4] },
-        { top: safeImages[2], bottom: safeImages[5] },
-      ]
-    : []
+  // Distribute images across 3 columns in order (1st→col0, 2nd→col1, 3rd→col2, 4th→col0, …)
+  const cols: GalleryImage[][] = [[], [], []]
+  images.forEach((img, i) => cols[i % 3].push(img))
 
   return (
     <div className="min-h-screen bg-background">
@@ -89,14 +86,15 @@ export default async function GalleryPage() {
             </p>
           </div>
 
-          {/* Mobile: 2-column uniform grid (< sm) */}
+          {images.length === 0 && (
+            <p className="py-20 text-center text-sm text-muted-foreground">No gallery images yet.</p>
+          )}
+
+          {/* Mobile: 2-column grid */}
           <div className="grid grid-cols-2 gap-3 sm:hidden">
             {images.map((img) => (
-              <div key={img.src} className="group relative aspect-[3/4] overflow-hidden rounded-2xl">
-                <Image
-                  src={img.src}
-                  alt={img.alt}
-                  fill
+              <div key={img.id} className="group relative aspect-[3/4] overflow-hidden rounded-2xl">
+                <Image src={img.src} alt={img.alt} fill
                   className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                   sizes="50vw"
                 />
@@ -105,40 +103,27 @@ export default async function GalleryPage() {
             ))}
           </div>
 
-          {/* sm+: 3-column masonry — only renders when 6+ images are loaded */}
-          {columns.length > 0 && (
-            <div className="hidden sm:flex sm:items-stretch sm:gap-4">
-              {columns.map((col) => (
-                <div key={col.top.src} className="flex flex-1 min-w-0 flex-col gap-4">
-
-                  {/* Top image — fixed aspect ratio drives column height variation */}
-                  <div className={cn('group relative overflow-hidden rounded-2xl', col.top.aspect)}>
-                    <Image
-                      src={col.top.src}
-                      alt={col.top.alt}
-                      fill
-                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                      sizes="33vw"
-                    />
-                    <ImageOverlay category={col.top.category} label={col.top.label} />
-                  </div>
-
-                  {/* Bottom image — stretches to fill remaining height */}
-                  <div className="group relative flex-1 overflow-hidden rounded-2xl min-h-[180px]">
-                    <Image
-                      src={col.bottom.src}
-                      alt={col.bottom.alt}
-                      fill
-                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                      sizes="33vw"
-                    />
-                    <ImageOverlay category={col.bottom.category} label={col.bottom.label} />
-                  </div>
-
-                </div>
-              ))}
-            </div>
-          )}
+          {/* sm+: 3-column masonry with explicit aspect ratios per row */}
+          <div className="hidden sm:flex sm:gap-4">
+            {cols.map((col, colIdx) => (
+              <div key={colIdx} className="flex flex-1 min-w-0 flex-col gap-4">
+                {col.map((img, rowIdx) => {
+                  const aspect = rowIdx % 2 === 0
+                    ? TOP_ASPECTS[colIdx]
+                    : BOTTOM_ASPECTS[colIdx]
+                  return (
+                    <div key={img.id} className={cn('group relative overflow-hidden rounded-2xl', aspect)}>
+                      <Image src={img.src} alt={img.alt} fill
+                        className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        sizes="33vw"
+                      />
+                      <ImageOverlay category={img.category} label={img.label} />
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
+          </div>
 
         </div>
       </main>
