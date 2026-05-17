@@ -4,13 +4,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
 
-export function HeroSection() {
+export function HeroSection({ imageUrl = '/images/hero-bg.jpg' }: { imageUrl?: string }) {
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden">
       {/* Background image */}
       <div className="absolute inset-0">
         <Image
-          src="/images/hero-bg.jpg"
+          src={imageUrl}
           alt=""
           fill
           className="object-cover"

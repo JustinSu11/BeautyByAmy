@@ -12,7 +12,7 @@ const credentials = [
   { icon: Heart, label: 'Done With Love' },
 ]
 
-export function MeetAmySection() {
+export function MeetAmySection({ imageUrl = '/images/amy-portrait.jpg' }: { imageUrl?: string }) {
   const { ref, isVisible } = useScrollAnimate()
 
   // Bidirectional observer — rises + glows when in view, settles back when scrolled away
@@ -50,7 +50,7 @@ export function MeetAmySection() {
               )}
             >
               <Image
-                src="/images/amy-portrait.jpg"
+                src={imageUrl}
                 alt="Amy, certified beauty specialist and studio owner"
                 fill
                 className="object-cover"
