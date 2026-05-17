@@ -131,15 +131,16 @@ export function BookingSummary({ className }: { className?: string }) {
             Confirm Booking
           </button>
 
-          {modalOpen && (
-            <ConfirmModal
-              onClose={() => setModalOpen(false)}
-              onSuccess={(needsWaiver) => {
-                setModalOpen(false)
-                confirm(needsWaiver)
-              }}
-            />
-          )}
+          {/* Always mounted at step 3 — modal is off-screen when closed so
+              Square can pre-initialise the card iframe before the user opens it */}
+          <ConfirmModal
+            isOpen={modalOpen}
+            onClose={() => setModalOpen(false)}
+            onSuccess={(needsWaiver) => {
+              setModalOpen(false)
+              confirm(needsWaiver)
+            }}
+          />
 
           {selectedService.requiresDeposit && (
             <p className="mt-2 text-center text-xs text-muted-foreground">

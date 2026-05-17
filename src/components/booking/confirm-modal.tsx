@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useBooking } from '@/lib/booking-context'
+import { cn } from '@/lib/utils'
 import { X, CreditCard, Shield } from 'lucide-react'
 
 declare global {
@@ -19,26 +20,27 @@ declare global {
 }
 
 interface ConfirmModalProps {
+  isOpen: boolean
   onClose: () => void
   onSuccess: (needsWaiver: boolean) => void
 }
 
-export function ConfirmModal({ onClose, onSuccess }: ConfirmModalProps) {
+export function ConfirmModal({ isOpen, onClose, onSuccess }: ConfirmModalProps) {
   const { customerInfo, selectedService, selectedDate, selectedTime } = useBooking()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const cardRef = useRef<{ tokenize: () => Promise<{ status: 'OK' | 'Cancel' | 'Error' | 'Unknown'; token?: string; errors?: { message: string }[] }>; destroy: () => Promise<void> } | null>(null)
 
+  // Init Square card on component mount (step 3 entry) — not on modal open.
+  // The card container is rendered off-screen when the modal is closed so Square
+  // can attach to a real DOM node with real dimensions.
   useEffect(() => {
-    // Guard against React StrictMode double-invoke: track whether this effect
-    // instance was cleaned up before async init finished.
     let cancelled = false
 
     async function initCard() {
       try {
         if (!window.Square) throw new Error('Square SDK not available')
-        // Bail if a card is already mounted (StrictMode re-run guard)
-        if (cardRef.current) return
+        if (cardRef.current) return // already initialised (StrictMode guard)
 
         const payments = await window.Square.payments(
           process.env.NEXT_PUBLIC_SQUARE_APPLICATION_ID!,
@@ -46,10 +48,7 @@ export function ConfirmModal({ onClose, onSuccess }: ConfirmModalProps) {
         )
         const card = await payments.card()
 
-        if (cancelled) {
-          await card.destroy()
-          return
-        }
+        if (cancelled) { await card.destroy(); return }
 
         await card.attach('#square-card-container')
         cardRef.current = card
@@ -61,27 +60,29 @@ export function ConfirmModal({ onClose, onSuccess }: ConfirmModalProps) {
       }
     }
 
-    const squareSrc =
-      process.env.NODE_ENV === 'production'
-        ? 'https://web.squarecdn.com/v1/square.js'
-        : 'https://sandbox.web.squarecdn.com/v1/square.js'
-
     if (window.Square) {
-      // Script already loaded (e.g. modal reopened) — init directly
       initCard()
     } else {
-      const script = document.createElement('script')
-      script.src = squareSrc
-      script.onload = initCard
-      script.onerror = () => {
-        if (!cancelled) setError('Payment form failed to load. Please refresh and try again.')
+      // Fallback: script tag in page.tsx should have loaded it, but handle edge cases
+      const src = process.env.NODE_ENV === 'production'
+        ? 'https://web.squarecdn.com/v1/square.js'
+        : 'https://sandbox.web.squarecdn.com/v1/square.js'
+      const existing = document.querySelector(`script[src="${src}"]`)
+      if (existing) {
+        existing.addEventListener('load', initCard, { once: true })
+      } else {
+        const script = document.createElement('script')
+        script.src = src
+        script.onload = initCard
+        script.onerror = () => {
+          if (!cancelled) setError('Payment form failed to load. Please refresh and try again.')
+        }
+        document.head.appendChild(script)
       }
-      document.head.appendChild(script)
     }
 
     return () => {
       cancelled = true
-      // Destroy the card element so the container is clean on remount
       cardRef.current?.destroy().catch(() => {})
       cardRef.current = null
     }
@@ -123,7 +124,6 @@ export function ConfirmModal({ onClose, onSuccess }: ConfirmModalProps) {
           name: customerInfo.name,
           phone: customerInfo.phone,
           email: customerInfo.email,
-          // selectedService.id is the Square variation ID from fetchSquareServices
           serviceVariationId: selectedService.id,
           serviceVariationVersion: selectedService.variationVersion,
           serviceName: selectedService.name,
@@ -150,15 +150,28 @@ export function ConfirmModal({ onClose, onSuccess }: ConfirmModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+    // When closed: off-screen fixed so the card iframe stays in the DOM with real
+    // dimensions. When open: normal centered overlay.
+    <div
+      className={cn(
+        'fixed z-50',
+        isOpen
+          ? 'inset-0 flex items-center justify-center bg-black/50 px-4'
+          : 'left-[-9999px] top-0 w-[480px]'
+      )}
+      aria-hidden={!isOpen}
+      aria-modal={isOpen}
+    >
       <div className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-xl">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-4 top-4 cursor-pointer text-muted-foreground hover:text-foreground"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        {isOpen && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-4 top-4 cursor-pointer text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
 
         <div className="mb-5">
           <h2 className="font-serif text-xl text-charcoal">Secure Your Booking</h2>
