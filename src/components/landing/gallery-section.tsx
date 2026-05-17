@@ -6,15 +6,21 @@ import { cn } from '@/lib/utils'
 
 type GalleryImage = { url: string; label: string }
 
-const COLUMN_ASPECTS = ['aspect-[2/3]', 'aspect-square', 'aspect-[3/4]'] as const
+// Each column: [topAspect, bottomAspect] — explicit ratios so fill images always have a real height
+const COLUMN_ASPECTS = [
+  ['aspect-[2/3]',  'aspect-[4/3]'],
+  ['aspect-square', 'aspect-[4/3]'],
+  ['aspect-[3/4]',  'aspect-[4/3]'],
+] as const
 
 export function GallerySection({ images }: { images: GalleryImage[] }) {
   // Pair images into 3 columns of 2. Any image beyond 6 is ignored; fewer than 6
   // gracefully collapses — columns with no bottom image simply don't render one.
   const columns = [0, 1, 2].map((col) => ({
-    top:    images[col * 2]     ?? null,
-    bottom: images[col * 2 + 1] ?? null,
-    aspect: COLUMN_ASPECTS[col],
+    top:          images[col * 2]     ?? null,
+    bottom:       images[col * 2 + 1] ?? null,
+    topAspect:    COLUMN_ASPECTS[col][0],
+    bottomAspect: COLUMN_ASPECTS[col][1],
   }))
   const { ref, isVisible } = useScrollAnimate()
 
@@ -44,14 +50,13 @@ export function GallerySection({ images }: { images: GalleryImage[] }) {
             top image sets each column's distinct height, bottom image fills the rest */}
         <div
           className={cn(
-            'flex items-stretch gap-3 lg:gap-4 transition-all duration-700',
+            'flex items-start gap-3 lg:gap-4 transition-all duration-700',
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           )}
         >
           {columns.map((col, i) => col.top && (
             <div key={i} className="flex flex-col gap-3 lg:gap-4 flex-1 min-w-0">
-              {/* Top image — fixed aspect ratio, drives the column's visual height */}
-              <div className={cn('group relative overflow-hidden rounded-2xl', col.aspect)}>
+              <div className={cn('group relative overflow-hidden rounded-2xl', col.topAspect)}>
                 <Image
                   src={col.top.url}
                   alt={col.top.label}
@@ -61,9 +66,8 @@ export function GallerySection({ images }: { images: GalleryImage[] }) {
                 />
               </div>
 
-              {/* Bottom image — grows to fill remaining height, all columns bottom-align */}
               {col.bottom && (
-                <div className="group relative overflow-hidden rounded-2xl flex-1 min-h-[140px]">
+                <div className={cn('group relative overflow-hidden rounded-2xl', col.bottomAspect)}>
                   <Image
                     src={col.bottom.url}
                     alt={col.bottom.label}
