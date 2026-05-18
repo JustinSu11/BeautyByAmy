@@ -62,6 +62,7 @@ async function getCategories(img: Record<string, string>) {
       services: rows
         .filter((svc) => inferGroupLabel(svc.name, catId) === label)
         .map((svc) => ({
+          id: svc.id,
           name: svc.name,
           duration: formatDurationLong(svc.duration),
           price: formatPriceDisplay(svc.price),
@@ -74,7 +75,7 @@ async function getCategories(img: Record<string, string>) {
 
 // ── Components ────────────────────────────────────────────────────────────────
 
-function ServiceRow({ name, duration, price }: { name: string; duration: string; price: string }) {
+function ServiceRow({ id, name, duration, price }: { id: string; name: string; duration: string; price: string }) {
   const isVaries = price === 'Price varies'
   return (
     <div className="group grid grid-cols-[1fr_auto_auto] items-center gap-x-4 border-b border-border py-4 pl-3 transition-all duration-150 hover:bg-cream-dark/60 hover:pl-4 sm:grid-cols-[1fr_auto_auto_auto] sm:gap-x-6">
@@ -100,9 +101,9 @@ function ServiceRow({ name, duration, price }: { name: string; duration: string;
         {price}
       </p>
 
-      {/* Book button */}
+      {/* Book button — passes service ID and return path so booking page can pre-select */}
       <Link
-        href="/booking"
+        href={`/booking?service=${id}&from=%2Fservices`}
         className="whitespace-nowrap rounded-full border border-border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-foreground transition-all duration-150 hover:border-gold hover:bg-gold hover:text-white sm:px-4"
       >
         Book

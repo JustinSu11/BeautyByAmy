@@ -6,11 +6,17 @@ import { BookingSteps } from '@/components/booking/booking-steps'
 import { MobileBookingBar } from '@/components/booking/mobile-booking-bar'
 import type { Service } from '@/lib/services-data'
 
-export function BookingPageClient({ services }: { services: Service[] }) {
+interface Props {
+  services: Service[]
+  initialServiceId?: string  // pre-selects a service by Square variation ID
+  from?: string              // href for the back button
+}
+
+export function BookingPageClient({ services, initialServiceId, from }: Props) {
   return (
-    <BookingProvider services={services}>
+    <BookingProvider services={services} initialServiceId={initialServiceId}>
       <div className="min-h-screen bg-background">
-        <BookingHeader />
+        <BookingHeader from={from} />
         <main>
           <BookingSteps />
         </main>
