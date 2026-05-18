@@ -101,16 +101,20 @@ export default function AnnouncementsPage() {
             className={`${inputCls} w-full`}
           />
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Clock className="h-3.5 w-3.5 text-[#6B6B6B]" />
-              <label className="text-xs text-[#6B6B6B]">Schedule for (optional)</label>
+            <div className="flex flex-col gap-1">
+              <label className="flex items-center gap-1.5 text-xs text-[#6B6B6B]">
+                <Clock className="h-3.5 w-3.5" />
+                Schedule for (optional)
+              </label>
+              <div className="flex items-center rounded-lg border border-[#D9D1C7] bg-white px-3 py-2 focus-within:border-[#C9A96E] transition-colors">
+                <input
+                  type="datetime-local"
+                  value={scheduledFor}
+                  onChange={(e) => setScheduledFor(e.target.value)}
+                  className="text-xs text-[#2D2D2D] outline-none bg-transparent"
+                />
+              </div>
             </div>
-            <input
-              type="datetime-local"
-              value={scheduledFor}
-              onChange={(e) => setScheduledFor(e.target.value)}
-              className={`${inputCls} text-xs`}
-            />
             <button
               onClick={create}
               disabled={saving}
