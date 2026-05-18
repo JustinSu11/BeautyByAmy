@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Plus, Trash2, ToggleLeft, ToggleRight, Clock } from 'lucide-react'
+import { AdminDateTimePicker } from '@/components/admin/date-time-picker'
 import { toast } from 'sonner'
 
 type Announcement = {
@@ -106,14 +107,11 @@ export default function AnnouncementsPage() {
                 <Clock className="h-3.5 w-3.5" />
                 Schedule for (optional)
               </label>
-              <div className="flex items-center rounded-lg border border-[#D9D1C7] bg-white px-3 py-2 focus-within:border-[#C9A96E] transition-colors">
-                <input
-                  type="datetime-local"
-                  value={scheduledFor}
-                  onChange={(e) => setScheduledFor(e.target.value)}
-                  className="text-xs text-[#2D2D2D] outline-none bg-transparent"
-                />
-              </div>
+              <AdminDateTimePicker
+                value={scheduledFor}
+                onChange={setScheduledFor}
+                placeholder="Pick a date & time…"
+              />
             </div>
             <button
               onClick={create}
