@@ -63,6 +63,59 @@ export function formatPrice(price: number): string {
   return `$${price}`
 }
 
+// ── Public services page helpers ──────────────────────────────────────────────
+// These use the 4-bucket category system the public /services menu uses,
+// which is different from the booking page's 3-bucket system.
+
+export type PublicCategory = 'lashes' | 'brows' | 'pmu' | 'addons'
+
+/**
+ * Map a Square service name to one of the four public menu categories.
+ * Amy can override any individual service from the admin panel.
+ */
+export function inferPublicCategory(name: string): PublicCategory {
+  const n = name.toLowerCase()
+  if (/consultation|patch test|additional correction/.test(n)) return 'addons'
+  if (/ombr[eé]|microblad|microshad|lip blush|brow color refresh|cover.up|correction/.test(n)) return 'pmu'
+  if (/brow (tint|wax)|chin wax/.test(n)) return 'brows'
+  return 'lashes'
+}
+
+/**
+ * Infer the sub-group label shown within a category section (e.g. "Classic",
+ * "Volume", "Hybrid" within Lashes). Returns null when no sub-grouping needed.
+ */
+export function inferGroupLabel(name: string, category: PublicCategory): string | null {
+  const n = name.toLowerCase()
+  if (category === 'lashes') {
+    if (n.startsWith('classic')) return 'Classic'
+    if (n.startsWith('volume')) return 'Volume'
+    if (n.startsWith('hybrid')) return 'Hybrid'
+    return 'Other'
+  }
+  if (category === 'pmu') {
+    if (/lip blush/.test(n)) return 'Lips'
+    if (/brow color refresh/.test(n)) return 'Color Refreshes'
+    return 'Brows'
+  }
+  return null
+}
+
+/** Format a duration in minutes as a human-readable string: "2 hrs 30 mins" */
+export function formatDurationLong(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  if (hours === 0) return `${mins} mins`
+  if (mins === 0) return `${hours} ${hours === 1 ? 'hr' : 'hrs'}`
+  return `${hours} ${hours === 1 ? 'hr' : 'hrs'} ${mins} mins`
+}
+
+/** Format a price in dollars as "$185" or "Price varies" for $0 services */
+export function formatPriceDisplay(price: number): string {
+  if (price === 0) return 'Price varies'
+  return `$${price}`
+}
+
 // Simulated availability data
 export function getAvailableDates(month: number, year: number): number[] {
   const daysInMonth = new Date(year, month + 1, 0).getDate()

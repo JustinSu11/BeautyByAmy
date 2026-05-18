@@ -11,6 +11,7 @@ import {
   MonitorPlay,
   FileText,
   LogOut,
+  Scissors,
 } from 'lucide-react'
 
 const navGroups = [
@@ -18,6 +19,7 @@ const navGroups = [
     label: 'Content',
     items: [
       { href: '/admin',               label: 'Dashboard',     icon: LayoutDashboard },
+      { href: '/admin/services',      label: 'Services',      icon: Scissors        },
       { href: '/admin/gallery',       label: 'Gallery',       icon: ImageIcon       },
       { href: '/admin/announcements', label: 'Announcements', icon: Megaphone       },
     ],

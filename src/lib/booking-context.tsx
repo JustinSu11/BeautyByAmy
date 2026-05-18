@@ -47,12 +47,17 @@ function isValidEmail(email: string): boolean {
 export function BookingProvider({
   children,
   services,
+  initialServiceId,
 }: {
   children: ReactNode
   services: Service[]
+  initialServiceId?: string
 }) {
   const [step, setStep] = useState<BookingStep>('booking')
-  const [selectedService, setSelectedService] = useState<Service | null>(null)
+  // State initializer runs once on mount — pre-selects the service with no visible flash
+  const [selectedService, setSelectedService] = useState<Service | null>(() =>
+    initialServiceId ? (services.find((s) => s.id === initialServiceId) ?? null) : null,
+  )
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>(emptyCustomerInfo)

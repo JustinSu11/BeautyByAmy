@@ -11,9 +11,10 @@ const steps: { key: BookingStep; label: string; number: number }[] = [
   { key: 'summary', label: 'Confirm', number: 3 },
 ]
 
-export function BookingHeader() {
+export function BookingHeader({ from }: { from?: string }) {
   const { step } = useBooking()
   const currentIndex = steps.findIndex((s) => s.key === step)
+  const backHref = from ?? '/'
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm">
@@ -22,9 +23,9 @@ export function BookingHeader() {
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
-              href="/"
+              href={backHref}
               className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              aria-label="Back to home"
+              aria-label="Go back"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>

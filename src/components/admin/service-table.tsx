@@ -42,7 +42,7 @@ export function ServiceTable({ services: initial }: { services: Service[] }) {
     })
     if (!res.ok) { toast.error('Failed to move service'); return }
     // Update local state immediately — row jumps to new category section
-    setServices((prev) => prev.map((s) => s.id === svc.id ? { ...s, category } : s))
+    setServices((prev) => prev.map((s) => s.id === svc.id ? { ...s, category: category as Service['category'] } : s))
   }
 
   async function destroy(id: string) {
