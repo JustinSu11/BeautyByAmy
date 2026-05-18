@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -7,9 +9,16 @@ import { SiteFooter } from '@/components/site-footer'
 import { ServicesStickyNav } from '@/components/services/services-sticky-nav'
 import { cn } from '@/lib/utils'
 import { db } from '@/db'
-import { adminServices } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { serviceOverrides } from '@/db/schema'
 import { getSiteImageUrls } from '@/lib/site-images'
+import { fetchSquareServices } from '@/lib/square'
+import {
+  inferPublicCategory,
+  inferGroupLabel,
+  formatDurationLong,
+  formatPriceDisplay,
+  type PublicCategory,
+} from '@/lib/services-data'
 
 export const metadata: Metadata = {
   title: 'Services | BeautyByAmy',
@@ -30,22 +39,35 @@ function buildCategoryMeta(img: Record<string, string>) {
 
 async function getCategories(img: Record<string, string>) {
   const categoryMeta = buildCategoryMeta(img)
-  const data = await db
-    .select()
-    .from(adminServices)
-    .where(eq(adminServices.enabled, true))
-    .orderBy(adminServices.display_order)
+
+  // Fetch Square services and any category overrides Amy has set in the admin
+  const [squareServices, overrides] = await Promise.all([
+    fetchSquareServices().catch(() => []),
+    db.select().from(serviceOverrides),
+  ])
+
+  // Build a lookup: squareVariationId → overridden category
+  const overrideMap = new Map(overrides.map((o) => [o.square_variation_id, o.category as PublicCategory]))
 
   const categoryOrder = ['lashes', 'brows', 'pmu', 'addons'] as const
   return categoryOrder.map((catId) => {
-    const rows = data.filter((r) => r.category === catId)
-    const groupLabels = [...new Set(rows.map((r) => r.group_label ?? null))]
-    const groups = groupLabels.map((label) => ({
+    const rows = squareServices.filter(
+      (svc) => (overrideMap.get(svc.id) ?? inferPublicCategory(svc.name)) === catId,
+    )
+
+    // Sub-group labels within the category (e.g. Classic / Volume / Hybrid)
+    const uniqueLabels = [...new Set(rows.map((svc) => inferGroupLabel(svc.name, catId)))]
+    const groups = uniqueLabels.map((label) => ({
       label,
       services: rows
-        .filter((r) => (r.group_label ?? null) === label)
-        .map((r) => ({ name: r.name, duration: r.duration, price: r.price })),
+        .filter((svc) => inferGroupLabel(svc.name, catId) === label)
+        .map((svc) => ({
+          name: svc.name,
+          duration: formatDurationLong(svc.duration),
+          price: formatPriceDisplay(svc.price),
+        })),
     }))
+
     return { id: catId, ...categoryMeta[catId], groups }
   })
 }

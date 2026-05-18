@@ -121,6 +121,17 @@ export const manualWaivers = pgTable('manual_waivers', {
   created_at: timestamp('created_at').defaultNow().notNull(),
 })
 
+// Category overrides for the public services page.
+// When Amy moves a service to a different category in the admin, only that
+// override is stored here. Everything else falls through to inferPublicCategory().
+export const serviceOverrides = pgTable('service_overrides', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- snake_case matches DB column names
+  square_variation_id: text('square_variation_id').unique().notNull(),
+  category: text('category').notNull(), // 'lashes' | 'brows' | 'pmu' | 'addons'
+  updated_at: timestamp('updated_at').defaultNow().notNull(),
+})
+
 // ── Inferred types ────────────────────────────────────────────────────────────
 
 export type Customer = typeof customers.$inferSelect
@@ -132,3 +143,4 @@ export type GalleryImage = typeof galleryImages.$inferSelect
 export type Announcement = typeof announcements.$inferSelect
 export type SiteImage = typeof siteImages.$inferSelect
 export type ManualWaiver = typeof manualWaivers.$inferSelect
+export type ServiceOverride = typeof serviceOverrides.$inferSelect

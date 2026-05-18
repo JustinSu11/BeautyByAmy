@@ -1,23 +1,25 @@
 export const dynamic = 'force-dynamic'
 
 import { db } from '@/db'
-import { adminServices } from '@/db/schema'
-import { ServiceTable } from '@/components/admin/service-table'
-import type { Service } from '@/types/service'
+import { serviceOverrides } from '@/db/schema'
+import { fetchSquareServices } from '@/lib/square'
+import { ServiceCategoryTable } from '@/components/admin/service-category-table'
+import type { PublicCategory } from '@/lib/services-data'
 
 export default async function ServicesPage() {
-  const rows = await db
-    .select()
-    .from(adminServices)
-    .orderBy(adminServices.category, adminServices.display_order)
+  const [services, overrides] = await Promise.all([
+    fetchSquareServices().catch(() => []),
+    db.select().from(serviceOverrides),
+  ])
 
-  // Drizzle infers `category` as `string`; cast to the narrower Service type
-  // which the table components and API routes expect.
-  const services = rows as Service[]
+  // Build the override map the client component needs: variationId → category
+  const overrideMap = Object.fromEntries(
+    overrides.map((o) => [o.square_variation_id, o.category as PublicCategory]),
+  )
 
   return (
     <div className="p-7">
-      <ServiceTable services={services} />
+      <ServiceCategoryTable services={services} overrides={overrideMap} />
     </div>
   )
 }
