@@ -54,7 +54,7 @@ export const waivers = pgTable('waivers', {
 export const adminServices = pgTable('admin_services', {
   id: uuid('id').primaryKey().defaultRandom(),
   category: text('category').notNull(),        // 'lashes' | 'brows' | 'pmu' | 'addons'
-  /* eslint-disable @typescript-eslint/naming-convention */
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- snake_case matches DB column names
   group_label: text('group_label'),
   name: text('name').notNull(),
   duration: text('duration').notNull(),
@@ -62,7 +62,6 @@ export const adminServices = pgTable('admin_services', {
   enabled: boolean('enabled').default(true).notNull(),
   display_order: integer('display_order').default(0).notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
-  /* eslint-enable @typescript-eslint/naming-convention */
 })
 
 // Gallery images managed through the admin panel.
@@ -70,7 +69,7 @@ export const adminServices = pgTable('admin_services', {
 // If before_url is set, the card becomes a 2-item before/after carousel.
 export const galleryImages = pgTable('gallery_images', {
   id: uuid('id').primaryKey().defaultRandom(),
-  /* eslint-disable @typescript-eslint/naming-convention */
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- snake_case matches DB column names
   cloudinary_id: text('cloudinary_id').notNull(),
   url: text('url').notNull(),
   blur_data_url: text('blur_data_url').notNull(),
@@ -82,7 +81,6 @@ export const galleryImages = pgTable('gallery_images', {
   label: text('label').notNull(),
   display_order: integer('display_order').default(0).notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
-  /* eslint-enable @typescript-eslint/naming-convention */
 })
 
 // Site-wide announcement banner (only one active at a time)
@@ -90,31 +88,29 @@ export const announcements = pgTable('announcements', {
   id: uuid('id').primaryKey().defaultRandom(),
   message: text('message').notNull(),
   active: boolean('active').default(false).notNull(),
-  /* eslint-disable @typescript-eslint/naming-convention */
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- snake_case matches DB column names
   expires_at: timestamp('expires_at'),
   /** When set, the banner goes live automatically at this time even if active=false */
   scheduled_for: timestamp('scheduled_for'),
   created_at: timestamp('created_at').defaultNow().notNull(),
-  /* eslint-enable @typescript-eslint/naming-convention */
 })
 
 // Named image slots on the public site (hero, meet-amy, gallery-1…6)
 export const siteImages = pgTable('site_images', {
   id: uuid('id').primaryKey().defaultRandom(),
   slot: text('slot').unique().notNull(),
-  /* eslint-disable @typescript-eslint/naming-convention */
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- snake_case matches DB column names
   cloudinary_id: text('cloudinary_id').notNull(),
   url: text('url').notNull(),
   blur_data_url: text('blur_data_url').notNull(),
   alt: text('alt').notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
-  /* eslint-enable @typescript-eslint/naming-convention */
 })
 
 // Waivers manually uploaded by admin (paper scans, external PDFs, etc.)
 export const manualWaivers = pgTable('manual_waivers', {
   id: uuid('id').primaryKey().defaultRandom(),
-  /* eslint-disable @typescript-eslint/naming-convention */
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- snake_case matches DB column names
   client_name: text('client_name').notNull(),
   service: text('service').notNull(),
   appointment_date: timestamp('appointment_date'),
@@ -123,7 +119,6 @@ export const manualWaivers = pgTable('manual_waivers', {
   cloudinary_url: text('cloudinary_url'), // direct Cloudinary URL for download
   notes: text('notes'),
   created_at: timestamp('created_at').defaultNow().notNull(),
-  /* eslint-enable @typescript-eslint/naming-convention */
 })
 
 // ── Inferred types ────────────────────────────────────────────────────────────

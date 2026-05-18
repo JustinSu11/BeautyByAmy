@@ -52,7 +52,7 @@ export default function ContactPage() {
               Contact Us
             </h1>
             <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
-              Questions about a service or ready to book? We'd love to hear from you.
+              {"Questions about a service or ready to book? We'd love to hear from you."}
             </p>
           </div>
 
@@ -186,7 +186,7 @@ export default function ContactPage() {
                   Book Your Appointment
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-white/60">
-                  Choose your service, pick a time, and we'll take care of the rest.
+                  {"Choose your service, pick a time, and we'll take care of the rest."}
                 </p>
                 <Link
                   href="/booking"
