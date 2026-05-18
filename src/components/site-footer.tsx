@@ -1,12 +1,16 @@
 import Link from 'next/link'
-import { Instagram, Facebook, Mail, MapPin, Phone } from 'lucide-react'
+import { Instagram, Facebook, Mail, MapPin, Phone, Bug } from 'lucide-react'
 
 const footerLinks = [
   { label: 'Home', href: '/' },
   { label: 'Book Appointment', href: '/booking' },
   { label: 'Cancellation Policy', href: '/contact' },
   { label: 'Privacy Policy', href: '/contact' },
+  { label: 'Staff Login', href: '/login' },
 ]
+
+const BUG_REPORT_HREF =
+  'mailto:justin.nguyen.swe@gmail.com?subject=Bug%20Report%20%E2%80%94%20BeautyByAmy%20Website&body=Hi%2C%20I%20noticed%20an%20issue%20on%20the%20website%3A%0A%0A[Please%20describe%20what%20happened%20and%20which%20page%20you%20were%20on]'
 
 const socialLinks = [
   { label: 'Instagram', href: 'https://www.instagram.com/iibeautybyamyii/', icon: Instagram },
@@ -87,10 +91,15 @@ export function SiteFooter() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 border-t border-card/10 pt-8 text-center text-xs text-card/40">
-          <p>
-            {'© 2026 BeautyByAmy. All rights reserved. Crafted with care.'}
-          </p>
+        <div className="mt-12 flex flex-col items-center gap-3 border-t border-card/10 pt-8 text-xs text-card/40 sm:flex-row sm:justify-between">
+          <p>{'© 2026 BeautyByAmy. All rights reserved. Crafted with care.'}</p>
+          <a
+            href={BUG_REPORT_HREF}
+            className="flex items-center gap-1.5 transition-colors hover:text-gold-light"
+          >
+            <Bug className="h-3.5 w-3.5" />
+            Report a bug
+          </a>
         </div>
       </div>
     </footer>

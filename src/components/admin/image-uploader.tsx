@@ -9,39 +9,43 @@ type Props = {
 }
 
 export function ImageUploader({ onUploaded }: Props) {
-  const inputRef   = useRef<HTMLInputElement>(null)
-  const [loading, setLoading]   = useState(false)
-  const [category, setCategory] = useState('Lash Extensions')
-  const [label,    setLabel]    = useState('')
+  const afterRef   = useRef<HTMLInputElement>(null)
+  const beforeRef  = useRef<HTMLInputElement>(null)
+  const [loading,    setLoading]    = useState(false)
+  const [category,   setCategory]   = useState('Lash Extensions')
+  const [label,      setLabel]      = useState('')
+  const [afterName,  setAfterName]  = useState('')
+  const [beforeName, setBeforeName] = useState('')
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!label.trim()) {
-      toast.error('Add a label before uploading')
-      return
-    }
+  async function handleSubmit() {
+    const afterFile  = afterRef.current?.files?.[0]
+    const beforeFile = beforeRef.current?.files?.[0]
+    if (!afterFile) { toast.error('Choose an after image'); return }
+    if (!label.trim()) { toast.error('Add a label'); return }
 
     setLoading(true)
     const form = new FormData()
-    form.append('file', file)
+    form.append('file',     afterFile)
     form.append('category', category)
-    form.append('label', label)
+    form.append('label',    label)
+    if (beforeFile) form.append('beforeFile', beforeFile)
 
     const res = await fetch('/api/admin/gallery', { method: 'POST', body: form })
     setLoading(false)
 
-    if (!res.ok) {
-      toast.error('Upload failed — please try again')
-      return
-    }
+    if (!res.ok) { toast.error('Upload failed — please try again'); return }
+
     setLabel('')
-    if (inputRef.current) inputRef.current.value = ''
+    setAfterName('')
+    setBeforeName('')
+    if (afterRef.current)  afterRef.current.value  = ''
+    if (beforeRef.current) beforeRef.current.value = ''
     toast.success('Image uploaded successfully')
     onUploaded()
   }
 
   const inputCls = 'rounded-lg border border-[#D9D1C7] bg-white px-3 py-2.5 text-sm text-[#2D2D2D] placeholder:text-[#6B6B6B]/50 outline-none focus:border-[#C9A96E]'
+  const fileBtnCls = 'flex cursor-pointer items-center gap-2 rounded-lg border border-[#D9D1C7] bg-white px-3 py-2.5 text-sm text-[#6B6B6B] hover:border-[#C9A96E] transition'
 
   return (
     <div className="rounded-lg border-2 border-dashed border-[#D9D1C7] bg-white p-6 hover:border-[#C9A96E] hover:bg-[#C9A96E]/5 transition-colors">
@@ -53,21 +57,37 @@ export function ImageUploader({ onUploaded }: Props) {
           <option>Permanent Makeup</option>
           <option>Our Studio</option>
         </select>
+
         <input
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           placeholder="Label (e.g. Classic Set)"
           className={`${inputCls} flex-1 min-w-[180px]`}
         />
-        <label
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click() }}
-          className={`flex cursor-pointer items-center gap-2 rounded-lg bg-[#C9A96E] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#A68B4E] ${loading ? 'opacity-50 pointer-events-none' : ''}`}
-        >
-          <Upload className="h-4 w-4" />
-          {loading ? 'Uploading…' : 'Choose & Upload'}
-          <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+
+        {/* After image — required */}
+        <label className={fileBtnCls}>
+          <Upload className="h-4 w-4 shrink-0 text-[#C9A96E]" />
+          <span className="truncate max-w-[140px]">{afterName || 'After image *'}</span>
+          <input ref={afterRef} type="file" accept="image/*" className="hidden"
+            onChange={(e) => setAfterName(e.target.files?.[0]?.name ?? '')} />
         </label>
+
+        {/* Before image — optional */}
+        <label className={fileBtnCls}>
+          <Upload className="h-4 w-4 shrink-0 text-[#6B6B6B]/60" />
+          <span className="truncate max-w-[140px]">{beforeName || 'Before image (optional)'}</span>
+          <input ref={beforeRef} type="file" accept="image/*" className="hidden"
+            onChange={(e) => setBeforeName(e.target.files?.[0]?.name ?? '')} />
+        </label>
+
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="flex items-center gap-2 rounded-lg bg-[#C9A96E] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#A68B4E] disabled:opacity-50 cursor-pointer"
+        >
+          {loading ? 'Uploading…' : 'Upload'}
+        </button>
       </div>
     </div>
   )

@@ -307,7 +307,7 @@ function StepPersonalInfo({
     <div className="space-y-4">
       <div>
         <SectionTitle>Confirm Your Information</SectionTitle>
-        <SectionDesc>We've pre-filled the following from your booking. Review to confirm everything is correct.</SectionDesc>
+        <SectionDesc>{"We've pre-filled the following from your booking. Review to confirm everything is correct."}</SectionDesc>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <ReadOnlyField label="Full Name" value={prefill.name} />

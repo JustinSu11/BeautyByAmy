@@ -65,13 +65,19 @@ export const adminServices = pgTable('admin_services', {
   /* eslint-enable @typescript-eslint/naming-convention */
 })
 
-// Gallery images managed through the admin panel
+// Gallery images managed through the admin panel.
+// Each row is one "card" — the primary image is the After shot (shown by default).
+// If before_url is set, the card becomes a 2-item before/after carousel.
 export const galleryImages = pgTable('gallery_images', {
   id: uuid('id').primaryKey().defaultRandom(),
   /* eslint-disable @typescript-eslint/naming-convention */
   cloudinary_id: text('cloudinary_id').notNull(),
   url: text('url').notNull(),
   blur_data_url: text('blur_data_url').notNull(),
+  // Optional before image — when present the gallery card shows a carousel
+  before_cloudinary_id: text('before_cloudinary_id'),
+  before_url: text('before_url'),
+  before_blur_data_url: text('before_blur_data_url'),
   category: text('category').notNull(),
   label: text('label').notNull(),
   display_order: integer('display_order').default(0).notNull(),

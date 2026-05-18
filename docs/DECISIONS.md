@@ -98,6 +98,50 @@ A2P 10DLC registration is required for production SMS delivery.
 
 ## Decision History
 
+### 2026-05-17 — Before/after carousel on gallery cards
+
+**What:** Each gallery card is now a 2-item carousel when a "before" image is uploaded. The card
+defaults to the After image and shows chevron arrows + dot indicators on hover for switching.
+Clicking a card opens a fullscreen modal where the same carousel plays with keyboard navigation
+(← → for before/after, Esc to close). Cards with no before image behave as static photos.
+
+Three nullable columns were added to `gallery_images`: `before_cloudinary_id`, `before_url`,
+`before_blur_data_url`. The admin gallery uploader accepts an optional Before file at upload
+time; existing cards get an "Add before" button in the admin grid.
+
+**Why:** Amy's portfolio is almost entirely transformation photos. Storing both images on the same
+DB row keeps each card a single entity — no joins, no separate "pairs" concept. Making the before
+optional means the feature degrades gracefully for single images.
+
+---
+
+### 2026-05-17 — Gallery section removed from landing page
+
+**What:** The portfolio/gallery section was removed from the home page entirely. Gallery images
+now appear only on the dedicated `/gallery` route, powered by `GalleryClient` (a client
+component). `gallery-section.tsx` remains in the codebase but is no longer imported anywhere.
+
+**Why:** The admin "Gallery" panel manages images shown on the `/gallery` page. Having those
+images also appear as a preview section on the landing page created confusion: the "portfolio"
+landing section and the `/gallery` page were conceptually the same thing rendered twice.
+Removing the landing preview simplifies the data flow (home page only needs the 5 site-image
+slots) and lets the gallery page stand on its own.
+
+---
+
+### 2026-05-17 — Announcement scheduling (`scheduled_for` column)
+
+**What:** Added a nullable `scheduled_for: timestamp` column to the `announcements` table.
+The admin UI shows a datetime-local picker when creating an announcement. If set, the banner
+is shown only after that timestamp passes. The admin list shows Scheduled / Live / Inactive
+badges. The public banner API respects `scheduled_for` when filtering active announcements.
+
+**Why:** Amy sometimes wants to draft and save an announcement ahead of time (e.g., holiday
+hours a week before the holiday). A single nullable column on the existing table was the
+simplest approach — no separate "draft" state or status enum needed.
+
+---
+
 ### 2026-05-16 — Monorepo flattened; Flutter app removed
 
 **What:** Moved all of `apps/web/` to the repo root. Deleted `mobile_flutter/`, `turbo.json`,

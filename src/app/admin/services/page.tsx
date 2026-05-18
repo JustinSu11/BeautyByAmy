@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { ExternalLink } from 'lucide-react'
 
 export default function ServicesPage() {

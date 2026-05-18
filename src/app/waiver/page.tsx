@@ -1,4 +1,5 @@
-// apps/web/src/app/waiver/page.tsx
+export const dynamic = 'force-dynamic'
+
 import { redirect } from 'next/navigation'
 import { db } from '@/db'
 import { waiverTokens, bookings, customers, waivers } from '@/db/schema'

@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
-import 'dotenv/config'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-)
+import { db } from '@/db'
+import { adminServices } from '@/db/schema'
 
 const services = [
   // Lashes — Classic
@@ -49,10 +44,10 @@ const services = [
   { category: 'addons', group_label: null, name: 'Additional Correction / Touch Up',        duration: '2 hrs',         price: '$150', display_order: 3 },
 ]
 
-async function seed() {
-  const { error } = await supabase.from('services').insert(services)
-  if (error) { console.error('Seed failed:', error); process.exit(1) }
+async function main() {
+  await db.insert(adminServices).values(services)
   console.log(`Seeded ${services.length} services.`)
+  process.exit(0)
 }
 
-seed()
+main().catch((err) => { console.error(err); process.exit(1) })

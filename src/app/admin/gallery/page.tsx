@@ -4,7 +4,7 @@ import { GalleryGrid } from '@/components/admin/gallery-grid'
 
 export default async function GalleryAdminPage() {
   const data = await db
-    .select({ id: galleryImages.id, url: galleryImages.url, category: galleryImages.category, label: galleryImages.label })
+    .select({ id: galleryImages.id, url: galleryImages.url, before_url: galleryImages.before_url, category: galleryImages.category, label: galleryImages.label })
     .from(galleryImages)
     .orderBy(galleryImages.display_order)
 

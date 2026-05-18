@@ -159,8 +159,12 @@ src/app/
         │   ├── route.ts          GET all / POST new service
         │   └── [id]/route.ts     GET one / PATCH / DELETE service by ID
         ├── gallery/
-        │   ├── route.ts          GET all / POST upload gallery image (Cloudinary)
-        │   └── [id]/route.ts     PATCH (reorder) / DELETE gallery image
+        │   ├── route.ts          GET all / POST upload gallery image (Cloudinary); POST also
+        │   │                     accepts optional `beforeFile` to upload a before/after pair
+        │   └── [id]/route.ts     PATCH — add or replace the "before" image on an existing card
+        │                         (uploads to Cloudinary, deletes old before if present)
+        │                         DELETE — removes card from DB and deletes both after + before
+        │                         assets from Cloudinary
         ├── announcements/
         │   ├── route.ts          GET active / POST new announcement
         │   └── [id]/route.ts     DELETE announcement by ID
@@ -194,10 +198,20 @@ src/components/
 │   ├── sonner.tsx               Toast notification component (wraps Sonner library)
 │   └── spa-icon.jsx             Custom SVG spa/leaf icon
 │
+├── gallery/
+│   └── gallery-client.tsx       Client component powering the public /gallery page.
+│                                Renders a 2-col mobile grid and 3-col masonry desktop layout.
+│                                Each card is a before/after carousel (2-frame if `beforeUrl` set,
+│                                1-frame otherwise). Clicking a card opens a fullscreen modal
+│                                with crossfade and keyboard navigation (← → for before/after,
+│                                Esc to close). Exports `GalleryClient` and `GalleryCard` type.
+│
 ├── landing/                     Sections rendered on the home page
 │   ├── hero-section.tsx         Full-bleed hero with CTA button
 │   ├── featured-services-section.tsx   Highlighted service cards
-│   ├── gallery-section.tsx      Preview gallery grid
+│   ├── gallery-section.tsx      (Unused — kept for reference.) Was the landing-page gallery
+│   │                            preview. The portfolio section was removed from the home page;
+│   │                            gallery images now power /gallery exclusively.
 │   ├── meet-amy-section.tsx     Artist bio and photo
 │   ├── testimonial-section.tsx  Customer review cards
 │   └── cta-section.tsx          Bottom call-to-action band
@@ -244,8 +258,16 @@ src/lib/
 ├── booking-context.tsx React Context + Provider for the multi-step booking flow. Holds
 │                       selected service, date, customer info state across steps. Client-only.
 │
-├── cloudinary.ts       Cloudinary SDK wrapper. Exports `uploadFile(buffer, folder)` and
-│                       `deleteFile(publicId)`. Used by admin image upload routes.
+├── cloudinary.ts       Cloudinary SDK wrapper. Primary exports:
+│                       - `uploadImage(buffer, folder)` — uploads a Buffer, returns
+│                         `{ cloudinary_id, url, blur_data_url }` (used by gallery + site-image routes)
+│                       - `deleteImage(cloudinaryId)` — deletes an asset by public ID
+│                       Legacy generic exports also present: `uploadFile`, `deleteFile`.
+│                       Used by all admin image upload/delete routes.
+│
+├── site-images.ts      Server-side helper for public pages. Exports `getSiteImageUrls(slots)`
+│                       which queries the `site_images` DB table and falls back to static files
+│                       in `public/images/` for any slot not yet overridden by Amy.
 │
 ├── config.ts           Zod schema for the booking checkout payload (`CheckoutSchema`).
 │                       Shared validation used by both client-side forms and the API route.
@@ -304,9 +326,17 @@ src/db/
                   - `waiver_tokens`  — single-use signed URLs; expire at appointment start
                   - `waivers`        — signed consent records with expiry window
                   - `services`       — CMS-managed service catalog rows
-                  - `gallery_images` — Cloudinary image metadata for public gallery
-                  - `site_images`    — Cloudinary image metadata for site-wide images (hero, etc.)
-                  - `announcements`  — sitewide banner messages
+                  - `gallery_images` — Cloudinary image metadata for public gallery; each row
+                                      has `url`/`cloudinary_id` for the after (primary) image
+                                      and nullable `before_url`/`before_cloudinary_id`/
+                                      `before_blur_data_url` for the before image in a
+                                      before/after pair
+                  - `site_images`    — Cloudinary image metadata for site-wide design slots:
+                                      `hero`, `meet-amy`, `service-lashes`, `service-brows`,
+                                      `service-pmu`. Falls back to static files if a slot has
+                                      no DB row.
+                  - `announcements`  — sitewide banner messages; `scheduled_for` (nullable
+                                      timestamp) defers activation until a future date/time
 ```
 
 ---
@@ -400,24 +430,33 @@ One-time Node.js scripts for seeding the database. Not imported by the applicati
 
 ```
 scripts/
-├── seed-services.ts    Seeds the `services` table from the static services-data.ts catalog.
-│                       Run once after initial DB setup.
-└── seed-gallery.ts     Seeds the `gallery_images` table with initial Cloudinary image records.
+├── seed-services.ts          Seeds the `services` table from the static services-data.ts catalog.
+│                             Run once after initial DB setup.
+├── seed-gallery.ts           Seeds the `gallery_images` table with initial Cloudinary image records.
+│                             Skips rows that already exist (safe to re-run).
+├── seed-site-images.ts       Uploads the 5 static site images (hero, meet-amy, service cards)
+│                             to Cloudinary and upserts the `site_images` table. Run once to
+│                             populate the site-images CMS with the default images.
+└── cleanup-gallery-slots.ts  One-time migration: deletes any legacy `gallery-*` rows from the
+                              `site_images` table (those slots no longer exist after the
+                              gallery/site-images separation).
 ```
 
-There is also `seed-waiver-test.mjs` at `apps/web/` root (not inside `scripts/`) — this is a
+All scripts use `npx tsx --env-file=.env scripts/<name>.ts`.
+
+There is also `seed-waiver-test.mjs` at the **repo root** (not inside `scripts/`) — a
 development-only script that creates a fake customer + booking + waiver token for testing the
 waiver flow locally:
 
 ```bash
-node apps/web/seed-waiver-test.mjs [lash|pmu|reconsent]
+node seed-waiver-test.mjs [lash|pmu|reconsent]
 ```
 
 ---
 
 ## Key Environment Variables
 
-Defined in `apps/web/.env` (see `.env.example` for the full list):
+Defined in `.env` at the repo root (see `.env.example` for the full list):
 
 | Variable | Used By | Purpose |
 |---|---|---|
