@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { ArrowRight, MapPin, Phone, Clock } from 'lucide-react'
 
 const contactDetails = [
-  { icon: MapPin, label: '100 North Florida Street, Mobile, AL 36607' },
+  { icon: MapPin, label: 'Charm Nail Lounge, 100 N Florida St Building E-3, Mobile, AL 36607' },
   { icon: Phone, label: '(251) 273-2769' },
   { icon: Clock, label: 'Mon–Sat: 9AM – 5PM | Sun: Closed' },
 ]

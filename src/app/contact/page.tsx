@@ -7,7 +7,7 @@ import { SiteFooter } from '@/components/site-footer'
 export const metadata: Metadata = {
   title: 'Contact | BeautyByAmy',
   description:
-    'Get in touch with BeautyByAmy. Visit our studio in Mobile, AL or reach out by phone and email.',
+    'Get in touch with BeautyByAmy. Visit our studio at Charm Nail Lounge in Mobile, AL or reach out by phone and email.',
 }
 
 const HOURS = [
@@ -72,12 +72,12 @@ export default function ContactPage() {
                   </h2>
                 </div>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  100 North Florida Street<br />
-                  Mobile, AL 36607<br />
-                  United States
+                  Charm Nail Lounge<br />
+                  100 N Florida St Building E-3<br />
+                  Mobile, AL 36607
                 </p>
                 <a
-                  href="https://maps.google.com/?q=100+North+Florida+Street+Mobile+AL+36607"
+                  href="https://maps.google.com/?q=Charm+Nail+Lounge+100+N+Florida+St+Building+E-3+Mobile+AL+36607"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-gold hover:text-[#A68B4E] transition-colors"
