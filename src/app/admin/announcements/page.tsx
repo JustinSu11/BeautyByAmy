@@ -106,7 +106,7 @@ export default function AnnouncementsPage() {
                 <Clock className="h-3.5 w-3.5" />
                 Schedule for (optional)
               </label>
-              <div className="flex items-center gap-2 rounded-lg border border-[#D9D1C7] bg-white px-3 py-2 focus-within:border-[#C9A96E] transition-colors">
+              <div className="flex items-center rounded-lg border border-[#D9D1C7] bg-white px-3 py-2 focus-within:border-[#C9A96E] transition-colors">
                 <input
                   type="datetime-local"
                   value={scheduledFor}
