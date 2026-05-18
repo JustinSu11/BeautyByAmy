@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1778026244842,
+      "tag": "0000_melted_riptide",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1746569200000,
+      "tag": "0001_waiver_received_column",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1746569400000,
+      "tag": "0002_waiver_received_at_timestamp",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1746569600000,
+      "tag": "0003_waiver_sent_at_and_expiry",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1746570000000,
+      "tag": "0004_drop_otp_tokens",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,204 @@
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import { useBooking } from '@/lib/booking-context'
+import { cn } from '@/lib/utils'
+import { X, CreditCard, Shield } from 'lucide-react'
+
+declare global {
+  interface Window {
+    Square?: {
+      payments: (appId: string, locationId: string) => Promise<{
+        card: () => Promise<{
+          attach: (selector: string) => Promise<void>
+          destroy: () => Promise<void>
+          tokenize: () => Promise<{ status: 'OK' | 'Cancel' | 'Error' | 'Unknown'; token?: string; errors?: { message: string }[] }>
+        }>
+      }>
+    }
+  }
+}
+
+interface ConfirmModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSuccess: (needsWaiver: boolean) => void
+}
+
+export function ConfirmModal({ isOpen, onClose, onSuccess }: ConfirmModalProps) {
+  const { customerInfo, selectedService, selectedDate, selectedTime } = useBooking()
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const cardRef = useRef<{ tokenize: () => Promise<{ status: 'OK' | 'Cancel' | 'Error' | 'Unknown'; token?: string; errors?: { message: string }[] }>; destroy: () => Promise<void> } | null>(null)
+
+  // Init Square card on component mount (step 3 entry) — not on modal open.
+  // The card container is rendered off-screen when the modal is closed so Square
+  // can attach to a real DOM node with real dimensions.
+  useEffect(() => {
+    let cancelled = false
+
+    async function initCard() {
+      try {
+        if (!window.Square) throw new Error('Square SDK not available')
+        if (cardRef.current) return // already initialised (StrictMode guard)
+
+        const payments = await window.Square.payments(
+          process.env.NEXT_PUBLIC_SQUARE_APPLICATION_ID!,
+          process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!
+        )
+        const card = await payments.card()
+
+        if (cancelled) { await card.destroy(); return }
+
+        await card.attach('#square-card-container')
+        cardRef.current = card
+      } catch (err) {
+        if (!cancelled) {
+          console.error('[ConfirmModal] Square SDK init failed', err)
+          setError('Payment form failed to load. Please refresh and try again.')
+        }
+      }
+    }
+
+    if (window.Square) {
+      initCard()
+    } else {
+      // Fallback: script tag in page.tsx should have loaded it, but handle edge cases
+      const src = process.env.NODE_ENV === 'production'
+        ? 'https://web.squarecdn.com/v1/square.js'
+        : 'https://sandbox.web.squarecdn.com/v1/square.js'
+      const existing = document.querySelector(`script[src="${src}"]`)
+      if (existing) {
+        existing.addEventListener('load', initCard, { once: true })
+      } else {
+        const script = document.createElement('script')
+        script.src = src
+        script.onload = initCard
+        script.onerror = () => {
+          if (!cancelled) setError('Payment form failed to load. Please refresh and try again.')
+        }
+        document.head.appendChild(script)
+      }
+    }
+
+    return () => {
+      cancelled = true
+      cardRef.current?.destroy().catch(() => {})
+      cardRef.current = null
+    }
+  }, [])
+
+  async function handleConfirm() {
+    if (!cardRef.current || !selectedService || !selectedDate || !selectedTime) return
+    setLoading(true)
+    setError(null)
+
+    try {
+      const result = await cardRef.current.tokenize()
+      if (result.status !== 'OK' || !result.token) {
+        setError(result.errors?.[0]?.message ?? 'Card error. Please check your details.')
+        return
+      }
+
+      const [hourStr, minuteStr] = selectedTime.split(':')
+      const hour = parseInt(hourStr, 10)
+      const minute = parseInt(minuteStr, 10)
+      if (isNaN(hour) || isNaN(minute)) {
+        setError('Invalid time selection. Please go back and re-select a time.')
+        return
+      }
+
+      const startsAt = new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+        hour,
+        minute
+      ).toISOString()
+
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceId: result.token,
+          name: customerInfo.name,
+          phone: customerInfo.phone,
+          email: customerInfo.email,
+          serviceVariationId: selectedService.id,
+          serviceVariationVersion: selectedService.variationVersion,
+          serviceName: selectedService.name,
+          startsAt,
+          durationMinutes: selectedService.duration,
+          serviceId: selectedService.id,
+          requiresWaiver: selectedService.requiresWaiver ?? false,
+        }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error ?? 'Booking failed. Please try again.')
+        return
+      }
+
+      const data = await res.json().catch(() => ({}))
+      onSuccess(data.needsWaiver ?? false)
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    // When closed: off-screen fixed so the card iframe stays in the DOM with real
+    // dimensions. When open: normal centered overlay.
+    <div
+      className={cn(
+        'fixed z-50',
+        isOpen
+          ? 'inset-0 flex items-center justify-center bg-black/50 px-4'
+          : 'left-[-9999px] top-0 w-[480px]'
+      )}
+      aria-hidden={!isOpen}
+      aria-modal={isOpen}
+    >
+      <div className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-xl">
+        {isOpen && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-4 top-4 cursor-pointer text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+
+        <div className="mb-5">
+          <h2 className="font-serif text-xl text-charcoal">Secure Your Booking</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            A card is required to hold your appointment. You won&apos;t be charged today.
+          </p>
+        </div>
+
+        <div id="square-card-container" className="min-h-[100px]" />
+
+        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+
+        <button
+          type="button"
+          onClick={handleConfirm}
+          disabled={loading}
+          className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-gold px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <CreditCard className="h-4 w-4" />
+          {loading ? 'Confirming…' : 'Confirm Booking'}
+        </button>
+
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+          <Shield className="h-3.5 w-3.5" />
+          Card secured by Square. Only charged for no-shows or late cancellations.
+        </p>
+      </div>
+    </div>
+  )
+}
