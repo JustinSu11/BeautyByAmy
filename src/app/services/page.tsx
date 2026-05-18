@@ -43,7 +43,7 @@ async function getCategories(img: Record<string, string>) {
   // Fetch Square services and any category overrides Amy has set in the admin
   const [squareServices, overrides] = await Promise.all([
     fetchSquareServices().catch(() => []),
-    db.select().from(serviceOverrides),
+    db.select().from(serviceOverrides).catch(() => []),
   ])
 
   // Build a lookup: squareVariationId → overridden category

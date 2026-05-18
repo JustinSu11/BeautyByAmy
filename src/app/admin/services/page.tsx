@@ -9,7 +9,7 @@ import type { PublicCategory } from '@/lib/services-data'
 export default async function ServicesPage() {
   const [services, overrides] = await Promise.all([
     fetchSquareServices().catch(() => []),
-    db.select().from(serviceOverrides),
+    db.select().from(serviceOverrides).catch(() => []),
   ])
 
   // Build the override map the client component needs: variationId → category
