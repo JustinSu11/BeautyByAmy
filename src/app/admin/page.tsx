@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { db } from '@/db'
 import { galleryImages, announcements, siteImages } from '@/db/schema'
 import { fetchSquareServices } from '@/lib/square'
-import { isNull, lte, or, eq, and, gt } from 'drizzle-orm'
 import { ImageIcon, Megaphone, MonitorPlay, Scissors } from 'lucide-react'
 
 async function getStats() {

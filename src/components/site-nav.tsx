@@ -82,7 +82,7 @@ export function SiteNav() {
                 : 'text-card/70'
             )}
           >
-            Beauty Studio
+            Luxury Beauty Studio
           </span>
         </Link>
 

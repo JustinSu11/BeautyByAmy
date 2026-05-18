@@ -62,7 +62,7 @@ export function SiteFooter() {
             <ul className="flex flex-col gap-3 text-sm text-card/60">
               <li className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 shrink-0 text-gold/60" />
-                100 North Florida Street, Mobile, AL, United States, 36607
+                Charm Nail Lounge, 100 N Florida St Building E-3, Mobile, AL 36607
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0 text-gold/60" />

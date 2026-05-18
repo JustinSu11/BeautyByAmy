@@ -3,6 +3,7 @@ import { db } from '@/db'
 import { waivers, manualWaivers, customers } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 import { uploadFile, deleteFile } from '@/lib/cloudinary'
+import { appendCustomerNote } from '@/lib/square'
 import { NextResponse } from 'next/server'
 
 // Shape returned to the frontend for both digital and manual waivers
@@ -79,15 +80,24 @@ export async function POST(req: Request) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const form            = await req.formData()
-  const clientName      = form.get('client_name') as string | null
-  const service         = form.get('service') as string | null
-  const appointmentDate = form.get('appointment_date') as string | null
-  const notes           = form.get('notes') as string | null
-  const file            = form.get('file') as File | null
+  const form              = await req.formData()
+  const clientName        = form.get('client_name') as string | null
+  const squareCustomerId  = form.get('square_customer_id') as string | null
+  const service           = form.get('service') as string | null
+  const appointmentDate   = form.get('appointment_date') as string | null
+  const notes             = form.get('notes') as string | null
+  const file              = form.get('file') as File | null
 
   if (!clientName || !service) {
     return NextResponse.json({ error: 'client_name and service are required' }, { status: 400 })
+  }
+
+  // Require the client to exist in Square — they should have a profile from booking
+  if (!squareCustomerId) {
+    return NextResponse.json(
+      { error: 'No Square client selected. Please search and select a client from the dropdown.' },
+      { status: 400 }
+    )
   }
 
   let cloudinary_id:  string | null = null
@@ -122,9 +132,18 @@ export async function POST(req: Request) {
     .returning()
 
   if (!row) {
-    // Clean up uploaded file if DB insert fails
     if (cloudinary_id) await deleteFile(cloudinary_id).catch(() => null)
     return NextResponse.json({ error: 'Failed to save waiver record' }, { status: 500 })
   }
+
+  // Append a note to the client's Square profile so it's visible in Amy's dashboard
+  const dateLabel = appointmentDate
+    ? new Date(appointmentDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : 'date not specified'
+  const squareNote = `Signed waiver received — ${service} (${dateLabel}). Uploaded by admin.`
+  await appendCustomerNote(squareCustomerId, squareNote).catch((err) => {
+    console.error('[waivers] Failed to append Square note', { squareCustomerId, err })
+  })
+
   return NextResponse.json(row, { status: 201 })
 }

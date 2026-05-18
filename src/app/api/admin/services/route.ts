@@ -1,7 +1,6 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/db'
 import { adminServices } from '@/db/schema'
-import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 

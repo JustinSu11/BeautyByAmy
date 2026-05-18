@@ -8,10 +8,21 @@ const environment =
     ? SquareEnvironment.Production
     : SquareEnvironment.Sandbox
 
-export const squareClient = new SquareClient({
-  token: process.env.SQUARE_ACCESS_TOKEN ?? '',
-  environment,
-})
+// Lazy singleton — instantiated on first use rather than at module load time.
+// This prevents a missing SQUARE_ACCESS_TOKEN from crashing the module import
+// (which would cause an unrecoverable Server Component error before any
+// .catch() handler can run).
+let _client: SquareClient | null = null
+
+function getClient(): SquareClient {
+  if (!_client) {
+    _client = new SquareClient({
+      token: process.env.SQUARE_ACCESS_TOKEN ?? '',
+      environment,
+    })
+  }
+  return _client
+}
 
 // In-memory caches — server process lifetime, shared across all requests.
 // Services TTL matches the /api/services ISR window so they stay in sync.
@@ -21,7 +32,7 @@ const SERVICES_TTL_MS = 3_600_000 // 1 hour
 
 export async function getPrimaryTeamMemberId(): Promise<string> {
   if (_teamMemberId) return _teamMemberId
-  const result = await squareClient.teamMembers.search({
+  const result = await getClient().teamMembers.search({
     query: { filter: { locationIds: [process.env.SQUARE_LOCATION_ID!], status: 'ACTIVE' } },
   })
   const id = result.teamMembers?.[0]?.id
@@ -43,7 +54,8 @@ export async function upsertSquareCustomer(
   email: string,
   name: string
 ): Promise<SquareCustomerResult> {
-  const searchResult = await squareClient.customers.search({
+  const client = getClient()
+  const searchResult = await client.customers.search({
     query: { filter: { phoneNumber: { exact: phone } } },
   })
 
@@ -54,7 +66,7 @@ export async function upsertSquareCustomer(
   }
 
   const parts = name.trim().split(' ')
-  const createResult = await squareClient.customers.create({
+  const createResult = await client.customers.create({
     phoneNumber: phone,
     emailAddress: email,
     givenName: parts[0],
@@ -75,12 +87,10 @@ export async function saveCardOnFile(
   squareCustomerId: string,
   sourceId: string
 ): Promise<string> {
-  const result = await squareClient.cards.create({
+  const result = await getClient().cards.create({
     idempotencyKey: crypto.randomUUID(),
     sourceId,
-    card: {
-      customerId: squareCustomerId,
-    },
+    card: { customerId: squareCustomerId },
   })
   const cardId = result.card?.id
   if (!cardId) throw new Error('Square card creation returned no card ID')
@@ -99,7 +109,7 @@ export async function createSquareAppointment(params: {
   startsAt: string
   durationMinutes: number
 }): Promise<string> {
-  const result = await squareClient.bookings.create({
+  const result = await getClient().bookings.create({
     idempotencyKey: crypto.randomUUID(),
     booking: {
       locationId: process.env.SQUARE_LOCATION_ID!,
@@ -121,6 +131,43 @@ export async function createSquareAppointment(params: {
 }
 
 /**
+ * Search Square customers by name (case-insensitive partial match).
+ * Pages through up to 200 customers and filters locally — sufficient for a
+ * small beauty salon; Square's search API doesn't natively filter by name.
+ */
+export async function searchSquareCustomersByName(
+  query: string
+): Promise<Array<{ id: string; name: string; email?: string; phone?: string }>> {
+  if (query.trim().length < 2) return []
+
+  const q = query.trim().toLowerCase()
+  const results: Array<{ id: string; name: string; email?: string; phone?: string }> = []
+  let cursor: string | undefined
+
+  // Fetch up to 2 pages (200 customers) — more than enough for a beauty salon.
+  // The SDK's Page type uses hasNextPage() / getNextPage() rather than a cursor field.
+  let page = await getClient().customers.list({ limit: 100 })
+  for (let i = 0; i < 2; i++) {
+    for (const c of page.data ?? []) {
+      if (!c.id) continue
+      const full = [c.givenName, c.familyName].filter(Boolean).join(' ')
+      if (full.toLowerCase().includes(q)) {
+        results.push({
+          id:    c.id,
+          name:  full,
+          email: c.emailAddress ?? undefined,
+          phone: c.phoneNumber  ?? undefined,
+        })
+      }
+    }
+    if (!page.hasNextPage()) break
+    page = await page.getNextPage()
+  }
+
+  return results
+}
+
+/**
  * Append a note to a Square customer profile.
  * Used to record waiver signatures visible in Amy's Square dashboard.
  */
@@ -128,11 +175,12 @@ export async function appendCustomerNote(
   squareCustomerId: string,
   note: string
 ): Promise<void> {
-  const getResult = await squareClient.customers.get({ customerId: squareCustomerId })
+  const client = getClient()
+  const getResult = await client.customers.get({ customerId: squareCustomerId })
   const existing = getResult.customer?.note ?? ''
   const updated = existing ? `${existing}\n${note}` : note
   const version = getResult.customer?.version
-  await squareClient.customers.update({
+  await client.customers.update({
     customerId: squareCustomerId,
     note: updated,
     ...(version !== undefined && { version }),
@@ -152,7 +200,7 @@ export async function fetchSquareServices(): Promise<Service[]> {
     return _servicesCache.data
   }
 
-  const page = await squareClient.catalog.list({ types: 'ITEM' })
+  const page = await getClient().catalog.list({ types: 'ITEM' })
   const objects = page.data
   if (!objects || objects.length === 0) return []
 

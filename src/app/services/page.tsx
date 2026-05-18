@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -7,14 +9,21 @@ import { SiteFooter } from '@/components/site-footer'
 import { ServicesStickyNav } from '@/components/services/services-sticky-nav'
 import { cn } from '@/lib/utils'
 import { db } from '@/db'
-import { adminServices } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { serviceOverrides } from '@/db/schema'
 import { getSiteImageUrls } from '@/lib/site-images'
+import { fetchSquareServices } from '@/lib/square'
+import {
+  inferPublicCategory,
+  inferGroupLabel,
+  formatDurationLong,
+  formatPriceDisplay,
+  type PublicCategory,
+} from '@/lib/services-data'
 
 export const metadata: Metadata = {
-  title: 'Services | BeautyByAmy',
+  title: 'Services & Pricing — Lash Extensions, Brows & Permanent Makeup',
   description:
-    'Browse our full menu of eyelash extensions, brow services, and permanent makeup treatments — with transparent pricing and easy online booking.',
+    'View full pricing for eyelash extensions, microblading, ombré brows, lip blush, brow tinting, and more in Mobile, AL. Book online with BeautyByAmy at Charm Nail Lounge.',
 }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -30,29 +39,43 @@ function buildCategoryMeta(img: Record<string, string>) {
 
 async function getCategories(img: Record<string, string>) {
   const categoryMeta = buildCategoryMeta(img)
-  const data = await db
-    .select()
-    .from(adminServices)
-    .where(eq(adminServices.enabled, true))
-    .orderBy(adminServices.display_order)
+
+  // Fetch Square services and any category overrides Amy has set in the admin
+  const [squareServices, overrides] = await Promise.all([
+    fetchSquareServices().catch(() => []),
+    db.select().from(serviceOverrides).catch(() => []),
+  ])
+
+  // Build a lookup: squareVariationId → overridden category
+  const overrideMap = new Map(overrides.map((o) => [o.square_variation_id, o.category as PublicCategory]))
 
   const categoryOrder = ['lashes', 'brows', 'pmu', 'addons'] as const
   return categoryOrder.map((catId) => {
-    const rows = data.filter((r) => r.category === catId)
-    const groupLabels = [...new Set(rows.map((r) => r.group_label ?? null))]
-    const groups = groupLabels.map((label) => ({
+    const rows = squareServices.filter(
+      (svc) => (overrideMap.get(svc.id) ?? inferPublicCategory(svc.name)) === catId,
+    )
+
+    // Sub-group labels within the category (e.g. Classic / Volume / Hybrid)
+    const uniqueLabels = [...new Set(rows.map((svc) => inferGroupLabel(svc.name, catId)))]
+    const groups = uniqueLabels.map((label) => ({
       label,
       services: rows
-        .filter((r) => (r.group_label ?? null) === label)
-        .map((r) => ({ name: r.name, duration: r.duration, price: r.price })),
+        .filter((svc) => inferGroupLabel(svc.name, catId) === label)
+        .map((svc) => ({
+          id: svc.id,
+          name: svc.name,
+          duration: formatDurationLong(svc.duration),
+          price: formatPriceDisplay(svc.price),
+        })),
     }))
+
     return { id: catId, ...categoryMeta[catId], groups }
   })
 }
 
 // ── Components ────────────────────────────────────────────────────────────────
 
-function ServiceRow({ name, duration, price }: { name: string; duration: string; price: string }) {
+function ServiceRow({ id, name, duration, price }: { id: string; name: string; duration: string; price: string }) {
   const isVaries = price === 'Price varies'
   return (
     <div className="group grid grid-cols-[1fr_auto_auto] items-center gap-x-4 border-b border-border py-4 pl-3 transition-all duration-150 hover:bg-cream-dark/60 hover:pl-4 sm:grid-cols-[1fr_auto_auto_auto] sm:gap-x-6">
@@ -78,9 +101,9 @@ function ServiceRow({ name, duration, price }: { name: string; duration: string;
         {price}
       </p>
 
-      {/* Book button */}
+      {/* Book button — passes service ID and return path so booking page can pre-select */}
       <Link
-        href="/booking"
+        href={`/booking?service=${id}&from=%2Fservices`}
         className="whitespace-nowrap rounded-full border border-border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-foreground transition-all duration-150 hover:border-gold hover:bg-gold hover:text-white sm:px-4"
       >
         Book

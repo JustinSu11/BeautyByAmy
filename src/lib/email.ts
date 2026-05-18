@@ -3,7 +3,22 @@ import { Resend } from 'resend'
 import fs from 'fs'
 import path from 'path'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy singleton — `new Resend(undefined)` doesn't throw but every send call
+// will fail with an auth error.  We defer construction and guard with a check
+// so callers receive a clear error (and the module doesn't crash at import time
+// when RESEND_API_KEY hasn't been added to the environment yet).
+let _resend: Resend | null = null
+
+function getResend(): Resend {
+  if (!_resend) {
+    const key = process.env.RESEND_API_KEY
+    if (!key) {
+      throw new Error('[email] Resend is not configured — RESEND_API_KEY missing')
+    }
+    _resend = new Resend(key)
+  }
+  return _resend
+}
 
 // In development Resend only allows sending from the shared onboarding address.
 // Production uses the verified beautybyamy.com domain.
@@ -142,7 +157,7 @@ export async function sendWaiverEmail(params: WaiverEmailParams) {
 </html>
 `
 
-  const { error } = await resend.emails.send({
+  const { error } = await getResend().emails.send({
     from:     FROM,
     replyTo:  REPLY_TO,
     to:       [to],
