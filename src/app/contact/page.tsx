@@ -5,9 +5,9 @@ import { SiteNav } from '@/components/site-nav'
 import { SiteFooter } from '@/components/site-footer'
 
 export const metadata: Metadata = {
-  title: 'Contact | BeautyByAmy',
+  title: 'Contact & Location — Charm Nail Lounge, Mobile AL',
   description:
-    'Get in touch with BeautyByAmy. Visit our studio at Charm Nail Lounge in Mobile, AL or reach out by phone and email.',
+    'Find BeautyByAmy at Charm Nail Lounge, 100 N Florida St Building E-3, Mobile, AL 36607. Call (251) 273-2769 or book online for eyelash extensions, brow services, and permanent makeup.',
 }
 
 const HOURS = [

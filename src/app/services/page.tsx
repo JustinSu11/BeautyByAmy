@@ -21,9 +21,9 @@ import {
 } from '@/lib/services-data'
 
 export const metadata: Metadata = {
-  title: 'Services | BeautyByAmy',
+  title: 'Services & Pricing — Lash Extensions, Brows & Permanent Makeup',
   description:
-    'Browse our full menu of eyelash extensions, brow services, and permanent makeup treatments — with transparent pricing and easy online booking.',
+    'View full pricing for eyelash extensions, microblading, ombré brows, lip blush, brow tinting, and more in Mobile, AL. Book online with BeautyByAmy at Charm Nail Lounge.',
 }
 
 // ── Data ──────────────────────────────────────────────────────────────────────

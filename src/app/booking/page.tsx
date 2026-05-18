@@ -8,9 +8,9 @@ import { BookingPageClient } from './booking-client'
 import { BookingShell } from './booking-shell'
 
 export const metadata: Metadata = {
-  title: 'Book an Appointment | BeautyByAmy',
+  title: 'Book an Appointment — Lash & Brow Services in Mobile, AL',
   description:
-    'Select your services, choose a date and time, and book your luxury beauty appointment with Amy.',
+    'Book eyelash extensions, microblading, ombré brows, lip blush, or brow services online with BeautyByAmy in Mobile, AL. Same-day confirmation, card on file.',
 }
 
 const SQUARE_SDK_URL =

@@ -6,9 +6,9 @@ import { galleryImages } from '@/db/schema'
 import { GalleryClient, type GalleryCard } from '@/components/gallery/gallery-client'
 
 export const metadata: Metadata = {
-  title: 'Gallery | BeautyByAmy',
+  title: 'Gallery — Before & After Results in Mobile, AL',
   description:
-    'Browse our portfolio of eyelash extensions, permanent makeup, microblading, and brow services.',
+    'See real before-and-after results for eyelash extensions, microblading, ombré brows, and lip blush by BeautyByAmy in Mobile, AL. Book your transformation today.',
 }
 
 async function getGalleryCards(): Promise<GalleryCard[]> {

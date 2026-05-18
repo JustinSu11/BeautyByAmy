@@ -1,3 +1,12 @@
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'BeautyByAmy | Eyelash Extensions & Permanent Makeup in Mobile, AL',
+  description:
+    'Mobile, AL luxury beauty studio specialising in eyelash extensions, microblading, ombré brows, lip blush, and brow services. Book online — Charm Nail Lounge, 100 N Florida St.',
+  alternates: { canonical: 'https://iibeautybyamyii.com' },
+}
+
 import { SiteNav } from '@/components/site-nav'
 import { SiteFooter } from '@/components/site-footer'
 import { HeroSection } from '@/components/landing/hero-section'
