@@ -131,6 +131,43 @@ export async function createSquareAppointment(params: {
 }
 
 /**
+ * Search Square customers by name (case-insensitive partial match).
+ * Pages through up to 200 customers and filters locally — sufficient for a
+ * small beauty salon; Square's search API doesn't natively filter by name.
+ */
+export async function searchSquareCustomersByName(
+  query: string
+): Promise<Array<{ id: string; name: string; email?: string; phone?: string }>> {
+  if (query.trim().length < 2) return []
+
+  const q = query.trim().toLowerCase()
+  const results: Array<{ id: string; name: string; email?: string; phone?: string }> = []
+  let cursor: string | undefined
+
+  // Fetch up to 2 pages (200 customers) — more than enough for a beauty salon.
+  // The SDK's Page type uses hasNextPage() / getNextPage() rather than a cursor field.
+  let page = await getClient().customers.list({ limit: 100 })
+  for (let i = 0; i < 2; i++) {
+    for (const c of page.data ?? []) {
+      if (!c.id) continue
+      const full = [c.givenName, c.familyName].filter(Boolean).join(' ')
+      if (full.toLowerCase().includes(q)) {
+        results.push({
+          id:    c.id,
+          name:  full,
+          email: c.emailAddress ?? undefined,
+          phone: c.phoneNumber  ?? undefined,
+        })
+      }
+    }
+    if (!page.hasNextPage()) break
+    page = await page.getNextPage()
+  }
+
+  return results
+}
+
+/**
  * Append a note to a Square customer profile.
  * Used to record waiver signatures visible in Amy's Square dashboard.
  */
