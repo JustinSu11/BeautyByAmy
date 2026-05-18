@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { ChevronLeft, ChevronRight, CalendarDays, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -32,8 +32,11 @@ function formatDisplay(value: string): string {
 
 export function AdminDateTimePicker({ value, onChange, placeholder = 'Pick a date & time…' }: Props) {
   const today = new Date()
-  const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
+  // fixed position of the dropdown so it escapes any overflow-clipping parent
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0 })
 
   // Parse current value into date parts
   const parsed = value ? new Date(value) : null
@@ -43,10 +46,23 @@ export function AdminDateTimePicker({ value, onChange, placeholder = 'Pick a dat
   const [hour,      setHour]      = useState(parsed ? pad(parsed.getHours()) : '09')
   const [minute,    setMinute]    = useState(parsed ? pad(parsed.getMinutes()) : '00')
 
+  // Compute fixed position from trigger's bounding rect each time it opens
+  const openPicker = useCallback(() => {
+    if (triggerRef.current) {
+      const r = triggerRef.current.getBoundingClientRect()
+      setDropPos({ top: r.bottom + 8, left: r.left })
+    }
+    setOpen(o => !o)
+  }, [])
+
   // Close on outside click
   useEffect(() => {
     function onDown(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(target) &&
+        triggerRef.current && !triggerRef.current.contains(target)
+      ) {
         setOpen(false)
       }
     }
@@ -102,11 +118,12 @@ export function AdminDateTimePicker({ value, onChange, placeholder = 'Pick a dat
     viewYear === today.getFullYear()
 
   return (
-    <div ref={containerRef} className="relative">
+    <div className="relative">
       {/* Trigger button */}
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setOpen(o => !o)}
+        onClick={openPicker}
         className={cn(
           'flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-xs transition-colors',
           open
@@ -131,9 +148,13 @@ export function AdminDateTimePicker({ value, onChange, placeholder = 'Pick a dat
         )}
       </button>
 
-      {/* Dropdown */}
+      {/* Dropdown — fixed so it escapes any overflow-clipping parent (rounded cards etc.) */}
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-xl border border-[#D9D1C7] bg-white shadow-xl">
+        <div
+          ref={dropdownRef}
+          style={{ top: dropPos.top, left: dropPos.left }}
+          className="fixed z-50 w-72 rounded-xl border border-[#D9D1C7] bg-white shadow-xl"
+        >
 
           {/* Month navigation */}
           <div className="flex items-center justify-between border-b border-[#F0EBE3] px-4 py-3">
