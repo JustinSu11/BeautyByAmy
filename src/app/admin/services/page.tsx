@@ -18,7 +18,7 @@ export default async function ServicesPage() {
   )
 
   return (
-    <div className="p-7">
+    <div className="p-4 sm:p-7">
       <ServiceCategoryTable services={services} overrides={overrideMap} />
     </div>
   )

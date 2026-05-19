@@ -215,7 +215,7 @@ export function ServiceCategoryTable({ services, overrides: initialOverrides }: 
             </div>
 
             <div className={cn(
-              'overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-150',
+              'overflow-x-auto rounded-lg border bg-white shadow-sm transition-all duration-150',
               isDropTarget
                 ? 'border-[#C9A96E] ring-2 ring-[#C9A96E]/25 bg-[#C9A96E]/[0.03]'
                 : 'border-[#E8E2DA]',
@@ -228,7 +228,7 @@ export function ServiceCategoryTable({ services, overrides: initialOverrides }: 
                   {isDropTarget ? 'Drop here' : 'No services — drag one here'}
                 </div>
               ) : (
-                <table className="w-full text-sm">
+                <table className="w-full min-w-[480px] text-sm">
                   <thead>
                     <tr className="bg-[#F0EBE4] text-left">
                       <th className="w-8 border-b border-[#E8E2DA] px-3 py-3" />

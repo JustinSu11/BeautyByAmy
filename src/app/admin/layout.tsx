@@ -12,11 +12,15 @@ export default async function AdminLayout({
   if (!session) redirect('/login')
 
   return (
-    <div className="linen-bg flex min-h-screen text-[#2D2D2D]">
+    <div className="linen-bg flex h-screen overflow-hidden text-[#2D2D2D]">
       <AdminSidebar />
-      <main className="flex-1 overflow-auto">
-        {children}
-        <Toaster />
+      <main className="flex flex-1 flex-col overflow-hidden">
+        {/* Spacer so mobile fixed top bar doesn't overlap content */}
+        <div className="h-14 shrink-0 md:hidden" />
+        <div className="flex-1 overflow-y-auto">
+          {children}
+          <Toaster />
+        </div>
       </main>
     </div>
   )

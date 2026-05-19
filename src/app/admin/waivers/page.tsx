@@ -61,7 +61,7 @@ export default function WaiversPage() {
   }
 
   return (
-    <div className="p-7">
+    <div className="p-4 sm:p-7">
       {uploading && (
         <WaiverUploadForm onClose={() => setUploading(false)} onUploaded={load} />
       )}
@@ -108,9 +108,9 @@ export default function WaiversPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-hidden rounded-lg border border-[#E8E2DA] bg-white shadow-sm">
-        <table className="w-full text-sm">
+      {/* Table — horizontally scrollable on narrow screens */}
+      <div className="overflow-x-auto rounded-lg border border-[#E8E2DA] bg-white shadow-sm">
+        <table className="w-full min-w-[600px] text-sm">
           <thead>
             <tr className="bg-[#F0EBE4] text-left">
               <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[#6B6B6B] border-b border-[#E8E2DA]">Client</th>
