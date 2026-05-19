@@ -33,7 +33,7 @@ export function HeroSection({ imageUrl = '/images/hero-bg.jpg' }: { imageUrl?: s
         </h1>
         <p className="mx-auto mt-6 max-w-lg text-base leading-relaxed text-card/70 sm:text-lg">
           Bespoke eyelash extensions, brow artistry, and permanent makeup
-          by Amy — where precision meets luxury.
+          by Amy, where precision meets luxury.
         </p>
         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link

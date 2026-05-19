@@ -21,6 +21,7 @@ import {
   LogOut,
   Scissors,
   Menu,
+  Type,
 } from 'lucide-react'
 
 const navGroups = [
@@ -31,6 +32,7 @@ const navGroups = [
       { href: '/admin/services',      label: 'Services',      icon: Scissors        },
       { href: '/admin/gallery',       label: 'Gallery',       icon: ImageIcon       },
       { href: '/admin/announcements', label: 'Announcements', icon: Megaphone       },
+      { href: '/admin/content',       label: 'Site Text',     icon: Type            },
     ],
   },
   {

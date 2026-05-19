@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
 
       // PMU services: send re-consent if client has a prior waiver, otherwise full consent
       const waiverKey =
-        serviceMeta.category === 'permanent-makeup'
+        serviceMeta.category === 'signature'
           ? hasPriorWaiver ? 'reconsent' : 'pmu'
           : 'lash'
 

@@ -4,6 +4,7 @@
  * Safe to re-run — skips if rows already exist.
  */
 
+import 'dotenv/config'
 import * as fs from 'fs'
 import * as path from 'path'
 import { db } from '../src/db'

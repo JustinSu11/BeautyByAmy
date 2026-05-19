@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { db } from '@/db'
 import { serviceOverrides } from '@/db/schema'
 import { getSiteImageUrls } from '@/lib/site-images'
+import { getAllSiteContent } from '@/lib/site-content'
 import { fetchSquareServices } from '@/lib/square'
 import {
   inferPublicCategory,
@@ -21,47 +22,60 @@ import {
 } from '@/lib/services-data'
 
 export const metadata: Metadata = {
-  title: 'Services & Pricing — Lash Extensions, Brows & Permanent Makeup',
+  title: 'Services and Pricing | Lash Extensions, Brows and Permanent Makeup',
   description:
     'View full pricing for eyelash extensions, microblading, ombré brows, lip blush, brow tinting, and more in Mobile, AL. Book online with BeautyByAmy at Charm Nail Lounge.',
 }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-function buildCategoryMeta(img: Record<string, string>) {
+function buildCategoryMeta(img: Record<string, string>, content: Record<string, string>) {
   return {
-    lashes: { num: '01', name: 'Lashes',            label: 'Lash Extensions',         description: 'Individually applied silk lashes — classic, hybrid, or full volume — for a seamless, customised look that enhances your natural eye shape.', image: { src: img['service-lashes'], alt: 'Eyelash extension service' } },
-    brows:  { num: '02', name: 'Brows',             label: 'Brow Services',           description: 'Shape, tint, and define. Quick, high-impact brow treatments to keep your arches perfectly groomed between appointments.',                     image: { src: img['service-brows'],  alt: 'Brow artistry service'     } },
-    pmu:    { num: '03', name: 'Permanent\nMakeup', label: 'Permanent Makeup',        description: 'Semi-permanent artistry for brows and lips — wake up every morning with effortless definition that lasts years, not hours.',                  image: { src: img['service-pmu'],    alt: 'Permanent makeup service'  } },
-    addons: { num: '04', name: 'Add-ons',           label: 'Consultations & Add-ons', description: "Not sure where to start? Book a consultation with Amy to discuss your goals, skin tone, and lifestyle before committing to a treatment.",    image: { src: img['service-lashes'], alt: 'BeautyByAmy studio'         } },
+    lashes: {
+      num: '01',
+      name: 'Lash\nExtensions',
+      label: 'Luxury Lash Extensions',
+      description: content['lashes_description'],
+      image: { src: img['service-lashes'], alt: 'Eyelash extension service' },
+    },
+    signature: {
+      num: '02',
+      name: 'Brows\n& Lips',
+      label: 'Signature Brows & Lips',
+      description: content['signature_description'],
+      image: { src: img['service-pmu'], alt: 'Signature brows and lips service' },
+    },
+    'beauty-bar': {
+      num: '03',
+      name: 'Beauty\nBar',
+      label: 'Beauty Bar Services',
+      description: content['beauty_bar_description'],
+      image: { src: img['service-brows'], alt: 'Beauty bar services' },
+    },
   } as const
 }
 
-async function getCategories(img: Record<string, string>) {
-  const categoryMeta = buildCategoryMeta(img)
+async function getCategories(img: Record<string, string>, content: Record<string, string>) {
+  const categoryMeta = buildCategoryMeta(img, content)
 
-  // Fetch Square services and any category overrides Amy has set in the admin
   const [squareServices, overrides] = await Promise.all([
     fetchSquareServices().catch(() => []),
     db.select().from(serviceOverrides).catch(() => []),
   ])
 
-  // Build lookups: squareVariationId → overridden category / sort_order
   const overrideMap  = new Map(overrides.map((o) => [o.square_variation_id, o.category as PublicCategory]))
   const sortOrderMap = new Map(overrides.map((o) => [o.square_variation_id, o.sort_order]))
 
-  const categoryOrder = ['lashes', 'brows', 'pmu', 'addons'] as const
+  const categoryOrder = ['lashes', 'signature', 'beauty-bar'] as const
   return categoryOrder.map((catId) => {
     const rows = squareServices
       .filter((svc) => (overrideMap.get(svc.id) ?? inferPublicCategory(svc.name)) === catId)
-      // Apply Amy's explicit sort order; services without one stay in Square's default order
       .sort((a, b) => {
         const oa = sortOrderMap.get(a.id) ?? Infinity
         const ob = sortOrderMap.get(b.id) ?? Infinity
         return oa - ob
       })
 
-    // Sub-group labels within the category (e.g. Classic / Volume / Hybrid)
     const uniqueLabels = [...new Set(rows.map((svc) => inferGroupLabel(svc.name, catId)))]
     const groups = uniqueLabels.map((label) => ({
       label,
@@ -107,7 +121,7 @@ function ServiceRow({ id, name, duration, price }: { id: string; name: string; d
         {price}
       </p>
 
-      {/* Book button — passes service ID and return path so booking page can pre-select */}
+      {/* Book button */}
       <Link
         href={`/booking?service=${id}&from=%2Fservices`}
         className="whitespace-nowrap rounded-full border border-border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-foreground transition-all duration-150 hover:border-gold hover:bg-gold hover:text-white sm:px-4"
@@ -131,8 +145,12 @@ function OrnamentDivider() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function ServicesPage() {
-  const img = await getSiteImageUrls(['service-lashes', 'service-brows', 'service-pmu'])
-  const categories = await getCategories(img)
+  const [img, content] = await Promise.all([
+    getSiteImageUrls(['service-lashes', 'service-brows', 'service-pmu']),
+    getAllSiteContent(),
+  ])
+  const categories = await getCategories(img, content)
+
   return (
     <div className="linen-bg grain-overlay min-h-screen">
       <SiteNav />
@@ -154,14 +172,14 @@ export default async function ServicesPage() {
                 crafted.
               </h1>
               <p className="mt-6 max-w-md text-[15px] font-light leading-relaxed text-muted-foreground">
-                From natural lash enhancements to semi-permanent artistry — every
+                From natural lash enhancements to semi-permanent artistry, every
                 service is tailored to you, performed with the finest techniques
                 and premium products.
               </p>
 
-              {/* Stats — visible on mobile where image is hidden */}
+              {/* Stats */}
               <div className="mt-8 flex gap-8 lg:hidden">
-                {[['31+', 'Services'], ['4', 'Categories'], ['$15', 'Starting from']].map(([num, lbl]) => (
+                {[['31+', 'Services'], ['3', 'Categories'], ['$15', 'Starting from']].map(([num, lbl]) => (
                   <div key={lbl}>
                     <p className="font-serif text-3xl text-gold">{num}</p>
                     <p className="mt-1 text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{lbl}</p>
@@ -176,15 +194,13 @@ export default async function ServicesPage() {
                 <span className="flex h-8 w-8 items-center justify-center rounded-full border border-border transition-colors hover:border-gold">
                   ↓
                 </span>
-                Explore all 31 services
+                Explore all services
               </a>
             </div>
 
-            {/* Right — hero image (hidden on mobile) */}
+            {/* Right — hero image */}
             <div className="relative hidden lg:block">
-              {/* Offset gold border frame */}
               <div className="absolute -left-3 -top-3 bottom-3 right-3 rounded-[200px_200px_160px_160px] border border-gold-light" />
-              {/* Image */}
               <div className="relative h-[580px] overflow-hidden rounded-[200px_200px_160px_160px] shadow-[0_32px_80px_rgba(45,45,45,0.18)]">
                 <Image
                   src={img['service-lashes']}
@@ -195,16 +211,14 @@ export default async function ServicesPage() {
                   priority
                 />
               </div>
-              {/* Floating stat cards */}
               <div className="absolute -right-6 top-10 flex flex-col gap-3">
-                {[['31+', 'SERVICES'], ['4', 'CATEGORIES']].map(([num, lbl]) => (
+                {[['31+', 'SERVICES'], ['3', 'CATEGORIES']].map(([num, lbl]) => (
                   <div key={lbl} className="rounded-xl border border-border bg-card px-4 py-3 shadow-md text-center">
                     <p className="font-serif text-2xl text-gold">{num}</p>
                     <p className="mt-0.5 text-[9px] uppercase tracking-[0.15em] text-muted-foreground">{lbl}</p>
                   </div>
                 ))}
               </div>
-              {/* Floating price badge */}
               <div className="absolute -left-8 bottom-14 rounded-2xl border border-border bg-card px-5 py-4 shadow-lg">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Starting from</p>
                 <p className="mt-1 font-serif text-3xl text-gold-dark">$15</p>
@@ -238,7 +252,7 @@ export default async function ServicesPage() {
               <div className="relative mb-0 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex-1">
                   <p className="mb-2 font-serif text-[12px] italic tracking-[0.08em] text-gold">
-                    {cat.num} — {cat.label}
+                    {cat.num} · {cat.label}
                   </p>
                   <h2 className="whitespace-pre-line font-serif text-4xl leading-[1.08] text-charcoal sm:text-5xl">
                     {cat.name}
@@ -296,7 +310,6 @@ export default async function ServicesPage() {
               className="object-cover"
               sizes="(max-width: 1280px) 100vw, 1200px"
             />
-            {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-charcoal/92 via-charcoal/75 to-charcoal/50" />
 
             <div className="relative flex flex-col items-start gap-8 p-8 sm:p-12 lg:flex-row lg:items-center lg:justify-between lg:p-16">

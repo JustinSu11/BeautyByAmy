@@ -8,10 +8,9 @@ import { inferPublicCategory, formatDurationLong, formatPriceDisplay, type Publi
 import type { Service } from '@/lib/services-data'
 
 const CATEGORY_LABELS: Record<PublicCategory, string> = {
-  lashes: 'Lash Extensions',
-  brows:  'Brow Services',
-  pmu:    'Permanent Makeup',
-  addons: 'Consultations & Add-ons',
+  lashes:       'Luxury Lash Extensions',
+  signature:    'Signature Brows & Lips',
+  'beauty-bar': 'Beauty Bar Services',
 }
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as PublicCategory[]
@@ -25,7 +24,7 @@ interface Props {
 
 /** Build initial per-category ID arrays from services + override map */
 function buildInitialOrder(services: Service[], overrides: OverrideMap): Record<PublicCategory, string[]> {
-  const order = { lashes: [], brows: [], pmu: [], addons: [] } as Record<PublicCategory, string[]>
+  const order = { lashes: [], signature: [], 'beauty-bar': [] } as Record<PublicCategory, string[]>
   for (const svc of services) {
     const cat = overrides[svc.id] ?? inferPublicCategory(svc.name)
     order[cat].push(svc.id)
