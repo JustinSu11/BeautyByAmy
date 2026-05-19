@@ -8,9 +8,9 @@ import { Eye, PenLine, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const categoryIcons = {
-  eyelashes: Eye,
-  brows: PenLine,
-  'permanent-makeup': Sparkles,
+  lashes: Eye,
+  signature: Sparkles,
+  'beauty-bar': PenLine,
 }
 
 export function ServiceList() {

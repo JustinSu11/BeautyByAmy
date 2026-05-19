@@ -52,7 +52,7 @@ export default async function GalleryPage() {
               Our Work
             </h1>
             <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
-              A curated selection of transformations from our studio — lashes, brows, and
+              A curated selection of transformations from our studio: lashes, brows, and
               permanent makeup artistry.
             </p>
           </div>

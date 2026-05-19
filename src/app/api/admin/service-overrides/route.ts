@@ -4,7 +4,7 @@ import { serviceOverrides } from '@/db/schema'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-const CATEGORIES = ['lashes', 'brows', 'pmu', 'addons'] as const
+const CATEGORIES = ['lashes', 'signature', 'beauty-bar'] as const
 
 const overrideSchema = z.object({
   squareVariationId: z.string().min(1),

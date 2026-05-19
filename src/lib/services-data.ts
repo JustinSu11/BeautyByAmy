@@ -1,7 +1,8 @@
 export interface Service {
   id: string
   name: string
-  category: 'eyelashes' | 'brows' | 'permanent-makeup'
+  /** Booking-page category: maps to one of the three top-level tabs on /booking */
+  category: 'lashes' | 'signature' | 'beauty-bar'
   duration: number // in minutes
   price: number
   /** Square catalog object version — required by the Bookings API for optimistic locking.
@@ -16,9 +17,9 @@ export interface Service {
 }
 
 export const categories = [
-  { id: 'eyelashes' as const, label: 'Eyelashes', icon: 'eye' },
-  { id: 'brows' as const, label: 'Brows', icon: 'pencil' },
-  { id: 'permanent-makeup' as const, label: 'Permanent Makeup', icon: 'sparkles' },
+  { id: 'lashes' as const,     label: 'Lash Extensions', icon: 'eye'      },
+  { id: 'signature' as const,  label: 'Brows & Lips',    icon: 'sparkles' },
+  { id: 'beauty-bar' as const, label: 'Beauty Bar',      icon: 'pencil'   },
 ]
 
 /**
@@ -30,18 +31,27 @@ export function inferMetadata(
 ): Pick<Service, 'category' | 'requiresWaiver' | 'requiresDeposit' | 'waiverValidityDays'> {
   const n = name.toLowerCase()
 
-  const isPMU =
-    /ombr[eé]|microblad|microshad|lip blush|pmu|brow color refresh|cover.up|correction|consultation|patch test/.test(n)
-  const isBrows = /brow (tint|wax)|chin wax/.test(n)
-  const category: Service['category'] = isPMU ? 'permanent-makeup' : isBrows ? 'brows' : 'eyelashes'
+  // Beauty Bar: quick treatments — waxes, tints, threading, henna, consultations, patch tests
+  const isBeautyBar = /wax|tint|threading|henna|consultation|patch test/.test(n)
 
-  const isLash = category === 'eyelashes' && !n.includes('removal') && !n.includes('splash')
-  const isPMUProcedure = isPMU && !/consultation|patch test/.test(n)
-  const requiresWaiver = isLash || isPMUProcedure
-  const waiverValidityDays = isPMUProcedure ? 730 : isLash ? 365 : undefined
+  // Signature Brows & Lips: PMU + touchups/corrections, lamination
+  const isSignature =
+    !isBeautyBar &&
+    /ombr[eé]|microblad|microshad|lip blush|brow color refresh|cover.up|correction|lamination/.test(n)
+
+  const category: Service['category'] = isBeautyBar
+    ? 'beauty-bar'
+    : isSignature
+    ? 'signature'
+    : 'lashes'
+
+  const isLashSet = category === 'lashes' && !n.includes('removal') && !n.includes('splash')
+  const isPMUProcedure = isSignature && !/consultation|patch test/.test(n)
+  const requiresWaiver = isLashSet || isPMUProcedure
+  const waiverValidityDays = isPMUProcedure ? 730 : isLashSet ? 365 : undefined
 
   const isFullSet = /\bset\b|microblad|microshad|ombr[eé]|lip blush|cover.up/.test(n)
-  const requiresDeposit = isPMU || isFullSet
+  const requiresDeposit = (isSignature && isPMUProcedure) || isFullSet
 
   return { category, requiresWaiver, requiresDeposit, waiverValidityDays }
 }
@@ -64,20 +74,21 @@ export function formatPrice(price: number): string {
 }
 
 // ── Public services page helpers ──────────────────────────────────────────────
-// These use the 4-bucket category system the public /services menu uses,
-// which is different from the booking page's 3-bucket system.
+// These use the 3-bucket category system the public /services menu uses.
 
-export type PublicCategory = 'lashes' | 'brows' | 'pmu' | 'addons'
+export type PublicCategory = 'lashes' | 'signature' | 'beauty-bar'
 
 /**
- * Map a Square service name to one of the four public menu categories.
+ * Map a Square service name to one of the three public menu categories.
  * Amy can override any individual service from the admin panel.
  */
 export function inferPublicCategory(name: string): PublicCategory {
   const n = name.toLowerCase()
-  if (/consultation|patch test|additional correction/.test(n)) return 'addons'
-  if (/ombr[eé]|microblad|microshad|lip blush|brow color refresh|cover.up|correction/.test(n)) return 'pmu'
-  if (/brow (tint|wax)|chin wax/.test(n)) return 'brows'
+  // Beauty Bar: quick treatments — waxes, tints, threading, henna, consultations
+  if (/wax|tint|threading|henna|consultation|patch test/.test(n)) return 'beauty-bar'
+  // Signature: PMU brows and lips, touchups, corrections, lamination
+  if (/ombr[eé]|microblad|microshad|lip blush|brow color refresh|cover.up|correction|lamination/.test(n)) return 'signature'
+  // Default: lash extensions
   return 'lashes'
 }
 
@@ -91,12 +102,17 @@ export function inferGroupLabel(name: string, category: PublicCategory): string 
     if (n.startsWith('classic')) return 'Classic'
     if (n.startsWith('volume')) return 'Volume'
     if (n.startsWith('hybrid')) return 'Hybrid'
-    return 'Other'
+    return null
   }
-  if (category === 'pmu') {
+  if (category === 'signature') {
     if (/lip blush/.test(n)) return 'Lips'
-    if (/brow color refresh/.test(n)) return 'Color Refreshes'
+    if (/brow color refresh|cover.up|correction/.test(n)) return 'Touchups'
     return 'Brows'
+  }
+  if (category === 'beauty-bar') {
+    if (/wax/.test(n)) return 'Waxing'
+    if (/tint/.test(n)) return 'Tinting'
+    return null
   }
   return null
 }

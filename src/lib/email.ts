@@ -2,6 +2,7 @@
 import { Resend } from 'resend'
 import fs from 'fs'
 import path from 'path'
+import { BUSINESS_PHONE } from './config'
 
 // Lazy singleton — `new Resend(undefined)` doesn't throw but every send call
 // will fail with an auth error.  We defer construction and guard with a check
@@ -56,7 +57,6 @@ export interface WaiverEmailParams {
 export async function sendWaiverEmail(params: WaiverEmailParams) {
   const { to, clientName, serviceName, appointmentDate, waiverKey } = params
   const waiver = WAIVER_FILES[waiverKey]
-
   const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -134,7 +134,9 @@ export async function sendWaiverEmail(params: WaiverEmailParams) {
 
             <p style="margin:0 0 28px;font-size:13px;color:#888;line-height:1.6;">
               Or reply directly to this email with the completed form attached.
-              If you have any questions, don't hesitate to reach out.
+              If you have any questions, reply here or reach Amy at
+              <a href="mailto:${REPLY_TO}" style="color:#C9A96E;">${REPLY_TO}</a>
+              or call/text <a href="tel:${BUSINESS_PHONE}" style="color:#C9A96E;">${BUSINESS_PHONE}</a>.
             </p>
 
             <hr style="border:none;border-top:1px solid #eee;margin:0 0 24px;">
@@ -143,7 +145,8 @@ export async function sendWaiverEmail(params: WaiverEmailParams) {
               See you soon! ✨<br>
               <strong style="color:#3a3a3a;">Amy Le</strong><br>
               BeautyByAmy · Mobile, AL<br>
-              <a href="mailto:${REPLY_TO}" style="color:#C9A96E;">${REPLY_TO}</a>
+              <a href="mailto:${REPLY_TO}" style="color:#C9A96E;">${REPLY_TO}</a><br>
+              <a href="tel:${BUSINESS_PHONE}" style="color:#C9A96E;">${BUSINESS_PHONE}</a>
             </p>
 
           </td>

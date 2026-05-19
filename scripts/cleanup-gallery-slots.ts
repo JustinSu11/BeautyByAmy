@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { db } from '../src/db'
 import { siteImages } from '../src/db/schema'
 import { like } from 'drizzle-orm'

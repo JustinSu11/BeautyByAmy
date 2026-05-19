@@ -40,7 +40,7 @@ export default async function AdminDashboard() {
   ]
 
   return (
-    <div className="p-7">
+    <div className="p-4 sm:p-7">
       <h1 className="mb-1 font-serif text-xl font-semibold text-[#2D2D2D]">Dashboard</h1>
       <p className="mb-8 text-sm text-[#6B6B6B]">Welcome back, Amy.</p>
 

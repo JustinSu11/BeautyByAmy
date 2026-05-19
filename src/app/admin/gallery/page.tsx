@@ -9,7 +9,7 @@ export default async function GalleryAdminPage() {
     .orderBy(galleryImages.display_order)
 
   return (
-    <div className="p-7">
+    <div className="p-4 sm:p-7">
       <GalleryGrid images={data} />
     </div>
   )

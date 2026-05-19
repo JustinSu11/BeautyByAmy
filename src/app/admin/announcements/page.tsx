@@ -84,7 +84,7 @@ export default function AnnouncementsPage() {
   const inputCls = 'rounded-lg border border-[#D9D1C7] bg-white px-4 py-2.5 text-sm text-[#2D2D2D] placeholder:text-[#6B6B6B]/50 outline-none focus:border-[#C9A96E]'
 
   return (
-    <div className="p-7">
+    <div className="p-4 sm:p-7">
       <h1 className="mb-1 font-serif text-xl font-semibold text-[#2D2D2D]">Announcements</h1>
       <p className="mb-6 text-sm text-[#6B6B6B]">
         Only one announcement is live at a time. Leave the schedule blank to save as inactive — you can activate it manually later.

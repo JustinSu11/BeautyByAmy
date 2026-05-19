@@ -134,8 +134,20 @@ export const serviceOverrides = pgTable('service_overrides', {
   updated_at: timestamp('updated_at').defaultNow().notNull(),
 })
 
+// Site text blocks editable by admin (hero copy, category descriptions, etc.)
+export const siteContent = pgTable('site_content', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- snake_case matches DB column names
+  content_key: text('content_key').unique().notNull(),  // e.g. 'lashes_description'
+  value: text('value').notNull(),
+  label: text('label').notNull(),                        // human-readable label for admin UI
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- snake_case matches DB column names
+  updated_at: timestamp('updated_at').defaultNow().notNull(),
+})
+
 // ── Inferred types ────────────────────────────────────────────────────────────
 
+export type SiteContent = typeof siteContent.$inferSelect
 export type Customer = typeof customers.$inferSelect
 export type Booking = typeof bookings.$inferSelect
 export type WaiverToken = typeof waiverTokens.$inferSelect

@@ -8,10 +8,9 @@ import { inferPublicCategory, formatDurationLong, formatPriceDisplay, type Publi
 import type { Service } from '@/lib/services-data'
 
 const CATEGORY_LABELS: Record<PublicCategory, string> = {
-  lashes: 'Lash Extensions',
-  brows:  'Brow Services',
-  pmu:    'Permanent Makeup',
-  addons: 'Consultations & Add-ons',
+  lashes:       'Luxury Lash Extensions',
+  signature:    'Signature Brows & Lips',
+  'beauty-bar': 'Beauty Bar Services',
 }
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as PublicCategory[]
@@ -25,7 +24,7 @@ interface Props {
 
 /** Build initial per-category ID arrays from services + override map */
 function buildInitialOrder(services: Service[], overrides: OverrideMap): Record<PublicCategory, string[]> {
-  const order = { lashes: [], brows: [], pmu: [], addons: [] } as Record<PublicCategory, string[]>
+  const order = { lashes: [], signature: [], 'beauty-bar': [] } as Record<PublicCategory, string[]>
   for (const svc of services) {
     const cat = overrides[svc.id] ?? inferPublicCategory(svc.name)
     order[cat].push(svc.id)
@@ -215,7 +214,7 @@ export function ServiceCategoryTable({ services, overrides: initialOverrides }: 
             </div>
 
             <div className={cn(
-              'overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-150',
+              'overflow-x-auto rounded-lg border bg-white shadow-sm transition-all duration-150',
               isDropTarget
                 ? 'border-[#C9A96E] ring-2 ring-[#C9A96E]/25 bg-[#C9A96E]/[0.03]'
                 : 'border-[#E8E2DA]',
@@ -228,7 +227,7 @@ export function ServiceCategoryTable({ services, overrides: initialOverrides }: 
                   {isDropTarget ? 'Drop here' : 'No services — drag one here'}
                 </div>
               ) : (
-                <table className="w-full text-sm">
+                <table className="w-full min-w-[480px] text-sm">
                   <thead>
                     <tr className="bg-[#F0EBE4] text-left">
                       <th className="w-8 border-b border-[#E8E2DA] px-3 py-3" />

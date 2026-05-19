@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 const categories = [
-  { id: 'lashes',  label: 'Lash Extensions' },
-  { id: 'brows',   label: 'Brow Services' },
-  { id: 'pmu',     label: 'Permanent Makeup' },
-  { id: 'addons',  label: 'Add-ons' },
+  { id: 'lashes',     label: 'Lash Extensions' },
+  { id: 'signature',  label: 'Brows & Lips'    },
+  { id: 'beauty-bar', label: 'Beauty Bar'       },
 ]
 
 export function ServicesStickyNav() {

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Instagram, Facebook, Mail, MapPin, Phone, Bug } from 'lucide-react'
+import { BUSINESS_ADDRESS, BUSINESS_EMAIL, BUSINESS_PHONE } from '@/lib/config'
 
 const footerLinks = [
   { label: 'Home', href: '/' },
@@ -15,7 +16,7 @@ const BUG_REPORT_HREF =
 const socialLinks = [
   { label: 'Instagram', href: 'https://www.instagram.com/iibeautybyamyii/', icon: Instagram },
   { label: 'Facebook', href: 'https://www.facebook.com/iibeautybyamy/', icon: Facebook },
-  { label: 'Email', href: 'mailto:beautybyamyle@gmail.com', icon: Mail },
+  { label: 'Email', href: `mailto:${BUSINESS_EMAIL}`, icon: Mail },
 ]
 
 export function SiteFooter() {
@@ -62,15 +63,19 @@ export function SiteFooter() {
             <ul className="flex flex-col gap-3 text-sm text-card/60">
               <li className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 shrink-0 text-gold/60" />
-                Charm Nail Lounge, 100 N Florida St Building E-3, Mobile, AL 36607
+                {BUSINESS_ADDRESS}
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0 text-gold/60" />
-                (251) 273-2769
+                <a href={`tel:${BUSINESS_PHONE}`} className="transition-colors hover:text-gold-light">
+                  {BUSINESS_PHONE}
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0 text-gold/60" />
-                beautybyamyle@gmail.com
+                <a href={`mailto:${BUSINESS_EMAIL}`} className="transition-colors hover:text-gold-light">
+                  {BUSINESS_EMAIL}
+                </a>
               </li>
             </ul>
 

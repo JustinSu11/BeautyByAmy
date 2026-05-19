@@ -4,35 +4,38 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useScrollAnimate } from '@/hooks/use-scroll-animate'
 import { cn } from '@/lib/utils'
-import { ArrowRight, Eye, PenLine, Sparkles } from 'lucide-react'
+import { ArrowRight, Eye, Sparkles, PenLine } from 'lucide-react'
 
 type ServiceImages = { lashes: string; brows: string; pmu: string }
 
 export function FeaturedServicesSection({ images }: { images: ServiceImages }) {
   const featuredCategories = [
     {
-      title: 'Eyelash Extensions',
+      title: 'Luxury Lash Extensions',
       description:
         'From classic elegance to dramatic volume sets, every lash is individually applied for a seamless, natural look.',
       icon: Eye,
       image: images.lashes,
       priceFrom: '$75',
+      href: '/services#lashes',
     },
     {
-      title: 'Brow Artistry',
+      title: 'Signature Brows & Lips',
       description:
-        'Lamination, tinting, threading, and henna -- sculpted brows tailored to your unique face shape.',
-      icon: PenLine,
-      image: images.brows,
-      priceFrom: '$20',
-    },
-    {
-      title: 'Permanent Makeup',
-      description:
-        'Microblading, powder brows, and lip blush -- wake up every day with effortlessly beautiful definition.',
+        'Microblading, powder brows, and lip blush for effortlessly beautiful definition that lasts years, not hours.',
       icon: Sparkles,
       image: images.pmu,
       priceFrom: '$200',
+      href: '/services#signature',
+    },
+    {
+      title: 'Beauty Bar Services',
+      description:
+        'Waxing, tinting, threading, and more. Quick, high-impact treatments to keep your look perfectly polished.',
+      icon: PenLine,
+      image: images.brows,
+      priceFrom: '$15',
+      href: '/services#beauty-bar',
     },
   ]
   const { ref, isVisible } = useScrollAnimate()
@@ -67,8 +70,9 @@ export function FeaturedServicesSection({ images }: { images: ServiceImages }) {
           )}
         >
           {featuredCategories.map((cat) => (
-            <div
+            <Link
               key={cat.title}
+              href={cat.href}
               className="group overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-lg"
             >
               {/* Image */}
@@ -97,16 +101,13 @@ export function FeaturedServicesSection({ images }: { images: ServiceImages }) {
                     {'From '}
                     <span className="font-semibold text-charcoal">{cat.priceFrom}</span>
                   </span>
-                  <Link
-                    href="/booking"
-                    className="flex items-center gap-1 text-sm font-medium text-gold transition-colors hover:text-gold-dark"
-                  >
-                    View & Book
+                  <span className="flex items-center gap-1 text-sm font-medium text-gold transition-colors group-hover:text-gold-dark">
+                    View Services
                     <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
+                  </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

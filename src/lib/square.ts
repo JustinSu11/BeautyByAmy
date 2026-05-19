@@ -3,6 +3,41 @@ import { SquareClient, SquareEnvironment } from 'square'
 import type { Service } from './services-data'
 import { inferMetadata } from './services-data'
 
+/** IANA timezone for the business location (Mobile, AL = Central time). */
+const BUSINESS_TZ = 'America/Chicago'
+
+/** Convert a UTC ISO string to HH:mm (24h) in the business timezone. */
+function toBusinessHHMM(utcIso: string): string {
+  const formatted = new Intl.DateTimeFormat('en-US', {
+    timeZone: BUSINESS_TZ,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(utcIso))
+  // Guard: some runtimes return "24:xx" for midnight — normalise to "00:xx"
+  return formatted.replace(/^24:/, '00:')
+}
+
+/** Return the day-of-month (1–31) for a UTC ISO string in the business timezone. */
+function toBusinessDay(utcIso: string): number {
+  return Number(
+    new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, day: 'numeric' }).format(
+      new Date(utcIso)
+    )
+  )
+}
+
+/** Return the month index (0 = January) for a UTC ISO string in the business timezone. */
+function toBusinessMonth(utcIso: string): number {
+  return (
+    Number(
+      new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, month: 'numeric' }).format(
+        new Date(utcIso)
+      )
+    ) - 1
+  )
+}
+
 const environment =
   process.env.NODE_ENV === 'production'
     ? SquareEnvironment.Production
@@ -229,4 +264,106 @@ export async function fetchSquareServices(): Promise<Service[]> {
   const data = result.sort((a, b) => a.name.localeCompare(b.name))
   _servicesCache = { data, fetchedAt: Date.now() }
   return data
+}
+
+// ─── Availability ─────────────────────────────────────────────────────────────
+
+/**
+ * A bookable time slot returned by Square's SearchAvailability API.
+ * `time`    — HH:mm in the business timezone, used for display.
+ * `startAt` — UTC ISO string from Square, used directly as the booking startAt.
+ */
+export interface SquareTimeSlot {
+  time: string
+  startAt: string
+}
+
+/**
+ * Return the set of day-of-month numbers that have at least one bookable slot
+ * for the given service in the requested month.
+ *
+ * Uses `Date.UTC` for unambiguous UTC boundaries, then filters each returned
+ * availability by business-timezone day so edge cases around DST / TZ offset
+ * are handled correctly regardless of the server's local timezone.
+ */
+export async function fetchAvailableDaysInMonth(
+  serviceVariationId: string,
+  year: number,
+  month: number, // 0-indexed (0 = January)
+): Promise<number[]> {
+  const teamMemberId = await getPrimaryTeamMemberId()
+
+  // Wide UTC window covering the full calendar month plus a day of buffer on
+  // each side so we never miss a business-timezone slot near a month boundary.
+  const startAt = new Date(Date.UTC(year, month, 1)).toISOString()
+  const endAt = new Date(Date.UTC(year, month + 1, 2)).toISOString()
+
+  const response = await getClient().bookings.searchAvailability({
+    query: {
+      filter: {
+        startAtRange: { startAt, endAt },
+        locationId: process.env.SQUARE_LOCATION_ID!,
+        segmentFilters: [
+          {
+            serviceVariationId,
+            teamMemberIdFilter: { any: [teamMemberId] },
+          },
+        ],
+      },
+    },
+  })
+
+  const days = new Set<number>()
+  for (const avail of response.availabilities ?? []) {
+    if (!avail.startAt) continue
+    if (toBusinessMonth(avail.startAt) === month) {
+      days.add(toBusinessDay(avail.startAt))
+    }
+  }
+
+  return Array.from(days).sort((a, b) => a - b)
+}
+
+/**
+ * Return all available time slots for a specific date.
+ * Slots are sorted chronologically and filtered to the business timezone day.
+ */
+export async function fetchAvailableSlotsForDay(
+  serviceVariationId: string,
+  year: number,
+  month: number, // 0-indexed
+  day: number,
+): Promise<SquareTimeSlot[]> {
+  const teamMemberId = await getPrimaryTeamMemberId()
+
+  // Central time is UTC-5 (CDT) to UTC-6 (CST). A salon day running 9 AM–8 PM
+  // Central spans from 14:00 UTC to 02:00 UTC next day. Querying two full UTC
+  // days and filtering by business-timezone day captures every possible slot.
+  const startAt = new Date(Date.UTC(year, month, day)).toISOString()
+  const endAt = new Date(Date.UTC(year, month, day + 2)).toISOString()
+
+  const response = await getClient().bookings.searchAvailability({
+    query: {
+      filter: {
+        startAtRange: { startAt, endAt },
+        locationId: process.env.SQUARE_LOCATION_ID!,
+        segmentFilters: [
+          {
+            serviceVariationId,
+            teamMemberIdFilter: { any: [teamMemberId] },
+          },
+        ],
+      },
+    },
+  })
+
+  const slots: SquareTimeSlot[] = []
+  for (const avail of response.availabilities ?? []) {
+    if (!avail.startAt) continue
+    if (toBusinessDay(avail.startAt) === day && toBusinessMonth(avail.startAt) === month) {
+      slots.push({ time: toBusinessHHMM(avail.startAt), startAt: avail.startAt })
+    }
+  }
+
+  return slots.sort((a, b) => a.time.localeCompare(b.time))
 }

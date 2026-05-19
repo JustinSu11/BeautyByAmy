@@ -69,7 +69,7 @@ export function MeetAmySection({ imageUrl = '/images/amy-portrait.jpg' }: { imag
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground lg:text-lg">
               3x Certified Brow & Lash Artist specializing in lash extensions and
-              all brow services — including our most popular Ombré Brows. I&apos;m
+              all brow services, including our most popular Ombré Brows. I&apos;m
               dedicated to keeping your results as soft and natural as possible
               while giving you the shape and look that fits you and only you.
             </p>

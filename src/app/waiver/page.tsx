@@ -58,7 +58,7 @@ export default async function WaiverPage({
 
   // PMU returning clients get the shorter re-consent form
   let waiverType: WaiverType = 'lash'
-  if (category === 'permanent-makeup') {
+  if (category === 'signature') {
     const [priorWaiver] = await db
       .select({ id: waivers.id })
       .from(waivers)
