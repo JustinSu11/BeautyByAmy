@@ -16,7 +16,8 @@ interface BookingState {
   services: Service[]
   selectedService: Service | null
   selectedDate: Date | null
-  selectedTime: string | null
+  selectedTime: string | null        // HH:mm in business timezone — display only
+  selectedSlotStartAt: string | null // UTC ISO from Square — used for booking submission
   customerInfo: CustomerInfo
   policyAccepted: boolean
   confirmedNeedsWaiver: boolean | null
@@ -26,7 +27,8 @@ interface BookingContextValue extends BookingState {
   setStep: (step: BookingStep) => void
   selectService: (service: Service | null) => void
   setSelectedDate: (date: Date | null) => void
-  setSelectedTime: (time: string | null) => void
+  /** Select a time slot. Provide both the display time (HH:mm) and Square's UTC startAt. */
+  selectTimeSlot: (time: string | null, startAt: string | null) => void
   setCustomerInfo: (info: CustomerInfo) => void
   setPolicyAccepted: (accepted: boolean) => void
   confirm: (needsWaiver: boolean) => void
@@ -58,8 +60,9 @@ export function BookingProvider({
   const [selectedService, setSelectedService] = useState<Service | null>(() =>
     initialServiceId ? (services.find((s) => s.id === initialServiceId) ?? null) : null,
   )
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedDate, _setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [selectedSlotStartAt, setSelectedSlotStartAt] = useState<string | null>(null)
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>(emptyCustomerInfo)
   const [policyAccepted, setPolicyAccepted] = useState(false)
   const [confirmedNeedsWaiver, setConfirmedNeedsWaiver] = useState<boolean | null>(null)
@@ -69,8 +72,25 @@ export function BookingProvider({
     setStep('confirmed')
   }, [])
 
+  // Cascade: changing service clears date and time (availability differs per service)
   const selectService = useCallback((service: Service | null) => {
     setSelectedService(service)
+    _setSelectedDate(null)
+    setSelectedTime(null)
+    setSelectedSlotStartAt(null)
+  }, [])
+
+  // Cascade: changing date clears the selected time slot
+  const setSelectedDate = useCallback((date: Date | null) => {
+    _setSelectedDate(date)
+    setSelectedTime(null)
+    setSelectedSlotStartAt(null)
+  }, [])
+
+  // Set both the display time (HH:mm) and Square's UTC startAt together
+  const selectTimeSlot = useCallback((time: string | null, startAt: string | null) => {
+    setSelectedTime(time)
+    setSelectedSlotStartAt(startAt)
   }, [])
 
   const totalPrice = selectedService?.price ?? 0
@@ -96,8 +116,9 @@ export function BookingProvider({
   const reset = useCallback(() => {
     setStep('booking')
     setSelectedService(null)
-    setSelectedDate(null)
+    _setSelectedDate(null)
     setSelectedTime(null)
+    setSelectedSlotStartAt(null)
     setCustomerInfo(emptyCustomerInfo)
     setPolicyAccepted(false)
     setConfirmedNeedsWaiver(null)
@@ -114,7 +135,8 @@ export function BookingProvider({
         selectedDate,
         setSelectedDate,
         selectedTime,
-        setSelectedTime,
+        selectedSlotStartAt,
+        selectTimeSlot,
         customerInfo,
         setCustomerInfo,
         policyAccepted,

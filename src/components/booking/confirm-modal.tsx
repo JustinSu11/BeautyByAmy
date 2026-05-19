@@ -26,7 +26,7 @@ interface ConfirmModalProps {
 }
 
 export function ConfirmModal({ isOpen, onClose, onSuccess }: ConfirmModalProps) {
-  const { customerInfo, selectedService, selectedDate, selectedTime } = useBooking()
+  const { customerInfo, selectedService, selectedDate, selectedTime, selectedSlotStartAt } = useBooking()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const cardRef = useRef<{ tokenize: () => Promise<{ status: 'OK' | 'Cancel' | 'Error' | 'Unknown'; token?: string; errors?: { message: string }[] }>; destroy: () => Promise<void> } | null>(null)
@@ -100,21 +100,19 @@ export function ConfirmModal({ isOpen, onClose, onSuccess }: ConfirmModalProps) 
         return
       }
 
-      const [hourStr, minuteStr] = selectedTime.split(':')
-      const hour = parseInt(hourStr, 10)
-      const minute = parseInt(minuteStr, 10)
-      if (isNaN(hour) || isNaN(minute)) {
-        setError('Invalid time selection. Please go back and re-select a time.')
-        return
-      }
-
-      const startsAt = new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate(),
-        hour,
-        minute
-      ).toISOString()
+      // Use Square's original UTC startAt when available (set by time-slot-grid via
+      // selectTimeSlot). This is timezone-correct regardless of the user's browser
+      // timezone. Fall back to reconstructing from date+time parts for safety.
+      const startsAt = selectedSlotStartAt ?? (() => {
+        const [h, m] = selectedTime.split(':').map(Number)
+        return new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+          h,
+          m,
+        ).toISOString()
+      })()
 
       const res = await fetch('/api/bookings', {
         method: 'POST',
