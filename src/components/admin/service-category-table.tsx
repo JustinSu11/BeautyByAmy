@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { GripVertical } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -23,114 +23,209 @@ interface Props {
   overrides: OverrideMap
 }
 
-export function ServiceCategoryTable({ services, overrides: initialOverrides }: Props) {
-  const [overrides, setOverrides]   = useState<OverrideMap>(initialOverrides)
-  const [saving, setSaving]         = useState<string | null>(null)
-  const [draggingId, setDraggingId] = useState<string | null>(null)
-  const [dragOverCat, setDragOverCat] = useState<PublicCategory | null>(null)
-
-  function effectiveCategory(svc: Service): PublicCategory {
-    return overrides[svc.id] ?? inferPublicCategory(svc.name)
+/** Build initial per-category ID arrays from services + override map */
+function buildInitialOrder(services: Service[], overrides: OverrideMap): Record<PublicCategory, string[]> {
+  const order = { lashes: [], brows: [], pmu: [], addons: [] } as Record<PublicCategory, string[]>
+  for (const svc of services) {
+    const cat = overrides[svc.id] ?? inferPublicCategory(svc.name)
+    order[cat].push(svc.id)
   }
+  return order
+}
 
-  async function moveCategory(svcId: string, category: PublicCategory) {
-    setSaving(svcId)
-    const res = await fetch('/api/admin/service-overrides', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ squareVariationId: svcId, category }),
-    })
-    setSaving(null)
-    if (!res.ok) { toast.error('Failed to update category'); return }
-    setOverrides((prev) => ({ ...prev, [svcId]: category }))
-    toast.success(`Moved to ${CATEGORY_LABELS[category]}`)
+export function ServiceCategoryTable({ services, overrides: initialOverrides }: Props) {
+  const svcById = Object.fromEntries(services.map((s) => [s.id, s]))
+
+  const [overrides, setOverrides]         = useState<OverrideMap>(initialOverrides)
+  const [categoryOrder, setCategoryOrder] = useState<Record<PublicCategory, string[]>>(
+    () => buildInitialOrder(services, initialOverrides)
+  )
+  const [draggingId, setDraggingId]       = useState<string | null>(null)
+  const [hoverRowId, setHoverRowId]       = useState<string | null>(null)
+  const [hoverPos,   setHoverPos]         = useState<'before' | 'after'>('after')
+  const [hoverCat,   setHoverCat]         = useState<PublicCategory | null>(null)
+  const savingRef = useRef(false)
+
+  function getCategoryForId(id: string): PublicCategory {
+    return (CATEGORIES.find((cat) => categoryOrder[cat].includes(id)) ?? 'addons') as PublicCategory
   }
 
   // ── Drag handlers ────────────────────────────────────────────────────────────
 
-  function onDragStart(e: React.DragEvent, svcId: string) {
-    e.dataTransfer.setData('serviceId', svcId)
+  function onDragStart(e: React.DragEvent, id: string) {
+    e.dataTransfer.setData('serviceId', id)
     e.dataTransfer.effectAllowed = 'move'
-    setDraggingId(svcId)
+    setDraggingId(id)
   }
 
   function onDragEnd() {
     setDraggingId(null)
-    setDragOverCat(null)
+    setHoverRowId(null)
+    setHoverCat(null)
   }
 
-  function onDragOver(e: React.DragEvent, cat: PublicCategory) {
-    e.preventDefault()                        // required — tells browser this is a valid drop target
+  /** Row-level drag-over: track which half of the row the cursor is in */
+  function onRowDragOver(e: React.DragEvent, id: string) {
+    e.preventDefault()
+    e.stopPropagation()
     e.dataTransfer.dropEffect = 'move'
-    setDragOverCat(cat)
+    const rect = e.currentTarget.getBoundingClientRect()
+    setHoverRowId(id)
+    setHoverPos(e.clientY < rect.top + rect.height / 2 ? 'before' : 'after')
+    setHoverCat(null)
+  }
+
+  /** Category empty-area drag-over (fires when not over a row) */
+  function onCatDragOver(e: React.DragEvent, cat: PublicCategory) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setHoverCat(cat)
+    setHoverRowId(null)
   }
 
   function onDragLeave() {
-    setDragOverCat(null)
+    setHoverCat(null)
   }
 
-  async function onDrop(e: React.DragEvent, cat: PublicCategory) {
+  /** Drop onto a specific row — handles both reorder and cross-category */
+  async function onRowDrop(e: React.DragEvent, targetCat: PublicCategory, targetRowId: string) {
     e.preventDefault()
-    setDragOverCat(null)
-    setDraggingId(null)
-
-    const svcId = e.dataTransfer.getData('serviceId')
-    if (!svcId) return
-
-    const svc = services.find((s) => s.id === svcId)
-    if (!svc) return
-
-    // No-op if dropped onto the same category it's already in
-    if (effectiveCategory(svc) === cat) return
-
-    await moveCategory(svcId, cat)
+    e.stopPropagation()
+    const draggedId = e.dataTransfer.getData('serviceId')
+    setDraggingId(null); setHoverRowId(null); setHoverCat(null)
+    if (!draggedId || draggedId === targetRowId) return
+    await applyDrop(draggedId, targetCat, targetRowId, hoverPos)
   }
+
+  /** Drop onto an empty category area — appends to end */
+  async function onCatDrop(e: React.DragEvent, targetCat: PublicCategory) {
+    e.preventDefault()
+    const draggedId = e.dataTransfer.getData('serviceId')
+    setDraggingId(null); setHoverRowId(null); setHoverCat(null)
+    if (!draggedId) return
+    const sourceCat = getCategoryForId(draggedId)
+    if (sourceCat === targetCat && categoryOrder[targetCat].at(-1) === draggedId) return
+    await applyDrop(draggedId, targetCat, null, 'after')
+  }
+
+  async function applyDrop(
+    draggedId: string,
+    targetCat: PublicCategory,
+    targetRowId: string | null,
+    position: 'before' | 'after',
+  ) {
+    if (savingRef.current) return
+    savingRef.current = true
+
+    const sourceCat = getCategoryForId(draggedId)
+
+    // Remove from source
+    const sourceOrder = categoryOrder[sourceCat].filter((id) => id !== draggedId)
+
+    // Build target order
+    let targetOrder: string[]
+    if (sourceCat === targetCat) {
+      // Same category — reorder within the already-pruned array
+      targetOrder = [...sourceOrder]
+    } else {
+      targetOrder = [...categoryOrder[targetCat]]
+    }
+
+    if (targetRowId === null) {
+      // Drop onto empty area → append
+      targetOrder.push(draggedId)
+    } else {
+      const idx = targetOrder.indexOf(targetRowId)
+      const insertAt = position === 'before' ? idx : idx + 1
+      targetOrder.splice(Math.max(0, insertAt), 0, draggedId)
+    }
+
+    const newOrder: Record<PublicCategory, string[]> = {
+      ...categoryOrder,
+      [sourceCat]: sourceCat === targetCat ? targetOrder : sourceOrder,
+      [targetCat]: targetOrder,
+    }
+
+    // Optimistic update
+    setCategoryOrder(newOrder)
+    if (sourceCat !== targetCat) {
+      setOverrides((prev) => ({ ...prev, [draggedId]: targetCat }))
+    }
+
+    // Persist — batch-save all services in affected categories
+    const affectedCats = sourceCat === targetCat ? [sourceCat] : [sourceCat, targetCat]
+    const payload = affectedCats.flatMap((cat) =>
+      newOrder[cat].map((id, index) => ({
+        squareVariationId: id,
+        category: cat,
+        sort_order: index,
+      }))
+    )
+
+    const res = await fetch('/api/admin/service-overrides', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    savingRef.current = false
+    if (!res.ok) {
+      toast.error('Failed to save order')
+      // Roll back
+      setCategoryOrder(categoryOrder)
+      if (sourceCat !== targetCat) setOverrides(initialOverrides)
+    } else {
+      toast.success(sourceCat !== targetCat
+        ? `Moved to ${CATEGORY_LABELS[targetCat]}`
+        : 'Order saved'
+      )
+    }
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
     <div>
       <div className="mb-6">
         <h1 className="font-serif text-xl font-semibold text-[#2D2D2D]">Services</h1>
         <p className="mt-0.5 text-sm text-[#6B6B6B]">
-          Services are managed in Square. Drag a service into a different category to reassign it on the public menu.
+          Drag services to reorder them or move them between categories. Changes appear on the public menu immediately.
         </p>
       </div>
 
       {CATEGORIES.map((cat) => {
-        const rows = services.filter((svc) => effectiveCategory(svc) === cat)
-        const isDropTarget = dragOverCat === cat
+        const ids = categoryOrder[cat]
+        const isDropTarget = hoverCat === cat && hoverRowId === null
 
         return (
           <div
             key={cat}
             className="mb-8"
-            onDragOver={(e) => onDragOver(e, cat)}
+            onDragOver={(e) => onCatDragOver(e, cat)}
             onDragLeave={onDragLeave}
-            onDrop={(e) => onDrop(e, cat)}
+            onDrop={(e) => onCatDrop(e, cat)}
           >
-            {/* Category header */}
             <div className="mb-3 flex items-center gap-3">
               <h2 className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#C9A96E]">
                 {CATEGORY_LABELS[cat]}
               </h2>
-              <span className="text-[10px] text-[#6B6B6B]/50">{rows.length} service{rows.length !== 1 ? 's' : ''}</span>
+              <span className="text-[10px] text-[#6B6B6B]/50">
+                {ids.length} service{ids.length !== 1 ? 's' : ''}
+              </span>
             </div>
 
-            {/* Drop zone */}
-            <div
-              className={cn(
-                'overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-150',
-                isDropTarget
-                  ? 'border-[#C9A96E] ring-2 ring-[#C9A96E]/25 bg-[#C9A96E]/[0.03]'
-                  : 'border-[#E8E2DA]',
-              )}
-            >
-              {rows.length === 0 ? (
-                /* Empty state — gives a visible drop target when a category has no services */
+            <div className={cn(
+              'overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-150',
+              isDropTarget
+                ? 'border-[#C9A96E] ring-2 ring-[#C9A96E]/25 bg-[#C9A96E]/[0.03]'
+                : 'border-[#E8E2DA]',
+            )}>
+              {ids.length === 0 ? (
                 <div className={cn(
                   'flex items-center justify-center py-6 text-xs text-[#6B6B6B]/40 transition-colors',
                   isDropTarget && 'text-[#C9A96E]'
                 )}>
-                  {isDropTarget ? 'Drop here to move' : 'No services — drag one here'}
+                  {isDropTarget ? 'Drop here' : 'No services — drag one here'}
                 </div>
               ) : (
                 <table className="w-full text-sm">
@@ -143,30 +238,33 @@ export function ServiceCategoryTable({ services, overrides: initialOverrides }: 
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((svc) => {
-                      const isOverridden = svc.id in overrides
-                      const isDragging   = draggingId === svc.id
-                      const isSaving     = saving === svc.id
+                    {ids.map((id) => {
+                      const svc = svcById[id]
+                      if (!svc) return null
+                      const isOverridden = id in overrides
+                      const isDragging   = draggingId === id
+                      const showBefore   = hoverRowId === id && hoverPos === 'before'
+                      const showAfter    = hoverRowId === id && hoverPos === 'after'
 
                       return (
                         <tr
-                          key={svc.id}
-                          draggable={!isSaving}
-                          onDragStart={(e) => onDragStart(e, svc.id)}
+                          key={id}
+                          draggable
+                          onDragStart={(e) => onDragStart(e, id)}
                           onDragEnd={onDragEnd}
+                          onDragOver={(e) => onRowDragOver(e, id)}
+                          onDrop={(e) => onRowDrop(e, cat, id)}
                           className={cn(
-                            'group transition-all duration-100',
+                            'group relative transition-colors duration-100',
                             isDragging  && 'opacity-40',
-                            isSaving    && 'opacity-60 pointer-events-none',
-                            !isDragging && !isSaving && 'hover:bg-[#F0EBE4]',
+                            !isDragging && 'hover:bg-[#F0EBE4]',
+                            showBefore  && 'border-t-2 border-t-[#C9A96E]',
+                            showAfter   && 'border-b-2 border-b-[#C9A96E]',
                           )}
                         >
-                          {/* Drag handle */}
                           <td className="border-b border-[#E8E2DA] px-3 py-3">
                             <GripVertical className="h-4 w-4 cursor-grab text-[#6B6B6B]/30 transition-colors group-hover:text-[#6B6B6B]/60 active:cursor-grabbing" />
                           </td>
-
-                          {/* Name */}
                           <td className="border-b border-[#E8E2DA] px-4 py-3 text-[13px] text-[#2D2D2D]">
                             <span className="cursor-grab active:cursor-grabbing">{svc.name}</span>
                             {isOverridden && (
@@ -174,11 +272,7 @@ export function ServiceCategoryTable({ services, overrides: initialOverrides }: 
                                 overridden
                               </span>
                             )}
-                            {isSaving && (
-                              <span className="ml-2 text-[10px] text-[#6B6B6B]/50">saving…</span>
-                            )}
                           </td>
-
                           <td className="border-b border-[#E8E2DA] px-4 py-3 text-[13px] text-[#6B6B6B]">
                             {formatDurationLong(svc.duration)}
                           </td>

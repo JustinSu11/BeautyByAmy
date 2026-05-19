@@ -129,6 +129,8 @@ export const serviceOverrides = pgTable('service_overrides', {
   // eslint-disable-next-line @typescript-eslint/naming-convention -- snake_case matches DB column names
   square_variation_id: text('square_variation_id').unique().notNull(),
   category: text('category').notNull(), // 'lashes' | 'brows' | 'pmu' | 'addons'
+  /** Position within the category on the public menu. null = use Square default order. */
+  sort_order: integer('sort_order'),
   updated_at: timestamp('updated_at').defaultNow().notNull(),
 })
 
