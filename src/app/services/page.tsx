@@ -46,14 +46,20 @@ async function getCategories(img: Record<string, string>) {
     db.select().from(serviceOverrides).catch(() => []),
   ])
 
-  // Build a lookup: squareVariationId → overridden category
-  const overrideMap = new Map(overrides.map((o) => [o.square_variation_id, o.category as PublicCategory]))
+  // Build lookups: squareVariationId → overridden category / sort_order
+  const overrideMap  = new Map(overrides.map((o) => [o.square_variation_id, o.category as PublicCategory]))
+  const sortOrderMap = new Map(overrides.map((o) => [o.square_variation_id, o.sort_order]))
 
   const categoryOrder = ['lashes', 'brows', 'pmu', 'addons'] as const
   return categoryOrder.map((catId) => {
-    const rows = squareServices.filter(
-      (svc) => (overrideMap.get(svc.id) ?? inferPublicCategory(svc.name)) === catId,
-    )
+    const rows = squareServices
+      .filter((svc) => (overrideMap.get(svc.id) ?? inferPublicCategory(svc.name)) === catId)
+      // Apply Amy's explicit sort order; services without one stay in Square's default order
+      .sort((a, b) => {
+        const oa = sortOrderMap.get(a.id) ?? Infinity
+        const ob = sortOrderMap.get(b.id) ?? Infinity
+        return oa - ob
+      })
 
     // Sub-group labels within the category (e.g. Classic / Volume / Hybrid)
     const uniqueLabels = [...new Set(rows.map((svc) => inferGroupLabel(svc.name, catId)))]
