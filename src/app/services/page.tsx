@@ -63,7 +63,12 @@ async function getCategories(img: Record<string, string>, content: Record<string
     db.select().from(serviceOverrides).catch(() => []),
   ])
 
-  const overrideMap  = new Map(overrides.map((o) => [o.square_variation_id, o.category as PublicCategory]))
+  // Only trust overrides whose category value is a currently valid category.
+  // Stale rows from old category names ('brows', 'pmu', 'addons') would cause
+  // the ?? fallback to never fire, silently dropping those services from the page.
+  const VALID_CATEGORIES = new Set<string>(['lashes', 'signature', 'beauty-bar'])
+  const validOverrides = overrides.filter((o) => VALID_CATEGORIES.has(o.category))
+  const overrideMap  = new Map(validOverrides.map((o) => [o.square_variation_id, o.category as PublicCategory]))
   const sortOrderMap = new Map(overrides.map((o) => [o.square_variation_id, o.sort_order]))
 
   const categoryOrder = ['lashes', 'signature', 'beauty-bar'] as const

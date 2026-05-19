@@ -31,13 +31,14 @@ export function inferMetadata(
 ): Pick<Service, 'category' | 'requiresWaiver' | 'requiresDeposit' | 'waiverValidityDays'> {
   const n = name.toLowerCase()
 
-  // Beauty Bar: quick treatments — waxes, tints, threading, henna, consultations, patch tests
-  const isBeautyBar = /wax|tint|threading|henna|consultation|patch test/.test(n)
+  // Beauty Bar: quick treatments — waxes, tints, threading, henna, consultations, patch tests,
+  // and correction/add-on services (e.g. "Additional Correction/Touch Up")
+  const isBeautyBar = /wax|tint|threading|henna|consultation|patch test|correction/.test(n)
 
-  // Signature Brows & Lips: PMU + touchups/corrections, lamination
+  // Signature Brows & Lips: all PMU services + touch-up appointments, lamination
   const isSignature =
     !isBeautyBar &&
-    /ombr[eé]|microblad|microshad|lip blush|brow color refresh|cover.up|correction|lamination/.test(n)
+    /ombr[eé]|microblad|microshad|lip blush|brow color refresh|cover.up|touch.?up|lamination/.test(n)
 
   const category: Service['category'] = isBeautyBar
     ? 'beauty-bar'
@@ -84,10 +85,11 @@ export type PublicCategory = 'lashes' | 'signature' | 'beauty-bar'
  */
 export function inferPublicCategory(name: string): PublicCategory {
   const n = name.toLowerCase()
-  // Beauty Bar: quick treatments — waxes, tints, threading, henna, consultations
-  if (/wax|tint|threading|henna|consultation|patch test/.test(n)) return 'beauty-bar'
-  // Signature: PMU brows and lips, touchups, corrections, lamination
-  if (/ombr[eé]|microblad|microshad|lip blush|brow color refresh|cover.up|correction|lamination/.test(n)) return 'signature'
+  // Beauty Bar: quick treatments — waxes, tints, threading, henna, consultations,
+  // and correction/add-on services (e.g. "Additional Correction/Touch Up")
+  if (/wax|tint|threading|henna|consultation|patch test|correction/.test(n)) return 'beauty-bar'
+  // Signature: all PMU brows and lips, touch-up appointments, lamination
+  if (/ombr[eé]|microblad|microshad|lip blush|brow color refresh|cover.up|touch.?up|lamination/.test(n)) return 'signature'
   // Default: lash extensions
   return 'lashes'
 }
@@ -106,7 +108,7 @@ export function inferGroupLabel(name: string, category: PublicCategory): string 
   }
   if (category === 'signature') {
     if (/lip blush/.test(n)) return 'Lips'
-    if (/brow color refresh|cover.up|correction/.test(n)) return 'Touchups'
+    if (/brow color refresh|cover.up|touch.?up/.test(n)) return 'Touchups'
     return 'Brows'
   }
   if (category === 'beauty-bar') {
